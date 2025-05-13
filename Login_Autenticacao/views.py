@@ -76,29 +76,6 @@ def cadastro(data):
     # Se o cadastro foi bem-sucedido, exibe a mensagem de sucesso e redireciona
     return True, "Cadastro realizado com sucesso!"
 
-def home_view(request):
-    # Recupera os dados da sessão
-    tipo = request.session.get('usuario_tipo')
-    nome = request.session.get('usuario_nome')
-
-    if not nome or not tipo:
-        # Usuário não está logado, redireciona para login
-        return redirect('login')
-
-    # Defina ações diferentes dependendo do tipo de usuário
-    if tipo == 'Cliente':
-        acoes = ['Editar Perfil', 'Apagar Perfil', 'Ver Agendamentos']
-    elif tipo == 'Barbeiro':
-        acoes = ['Editar Perfil', 'Apagar Perfil', 'Gerenciar Agenda']
-    else:
-        acoes = []
-
-    return render(request, 'Projeto/home.html', {
-        'nome': nome,
-        'tipo': tipo,
-        'acoes': acoes,
-    })
-
 def editar_perfil(data):
     try:
         usuario = Usuario.objects.get(id=data['usuario_id'])
