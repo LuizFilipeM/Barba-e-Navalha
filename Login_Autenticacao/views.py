@@ -1,8 +1,35 @@
+from django.shortcuts import render, redirect
 from .models import *
 from django.contrib.auth.hashers import check_password 
 from django.contrib.auth.hashers import make_password
 import json
 from django.http import JsonResponse
+
+
+def login_view(request):
+    if request.method == 'POST' and request.headers.get('Content-Type') == 'application/json':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Json inválido'}, status=400)
+        
+        success, msg, user_id, tipo, nome = login(data)
+
+        if success:
+            # Armazenando na sessão
+            request.session['usuario_id'] = user_id
+            request.session['usuario_tipo'] = tipo
+            request.session['usuario_nome'] = nome
+
+        return JsonResponse({
+            'success': success,
+            'message': msg,
+            'redirect_url': '/home' if success else ''
+        })
+
+    # Caso seja GET, apenas renderiza o formulário normalmente
+    return render(request, 'Projeto/login.html')
+          
 
 def login(data):
     print("chegou login(data)")
@@ -76,6 +103,29 @@ def cadastro(data):
     # Se o cadastro foi bem-sucedido, exibe a mensagem de sucesso e redireciona
     return True, "Cadastro realizado com sucesso!"
 
+def home_view(request):
+    # Recupera os dados da sessão
+    tipo = request.session.get('usuario_tipo')
+    nome = request.session.get('usuario_nome')
+
+    if not nome or not tipo:
+        # Usuário não está logado, redireciona para login
+        return redirect('login')
+
+    # Defina ações diferentes dependendo do tipo de usuário
+    if tipo == 'Cliente':
+        acoes = ['Editar Perfil', 'Apagar Perfil', 'Ver Agendamentos']
+    elif tipo == 'Barbeiro':
+        acoes = ['Editar Perfil', 'Apagar Perfil', 'Gerenciar Agenda']
+    else:
+        acoes = []
+
+    return render(request, 'Projeto/home.html', {
+        'nome': nome,
+        'tipo': tipo,
+        'acoes': acoes,
+    })
+
 def editar_perfil(data):
     try:
         usuario = Usuario.objects.get(id=data['usuario_id'])
@@ -126,7 +176,13 @@ def deletar_perfil(data):
         return {'status': 'error', 'message': 'Usuário não encontrado'}
     except Exception as e:
         return {'status': 'error', 'message': str(e)}
+
+def cadastrar_local(data):
+    nome_local = data.get('nome')
+    endereco = data.get('senha')
     
+    return True, "Cadastro realizado com sucesso!" 
+
 def logout_view(request):
     request.session.flush()  # Limpa todos os dados da sessão
     return redirect('login')  # Redireciona para a página de login
