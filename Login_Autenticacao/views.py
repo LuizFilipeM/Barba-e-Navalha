@@ -5,6 +5,7 @@ from django.contrib.auth.hashers import make_password
 import json
 from django.http import JsonResponse
 
+
 def login_view(request):
     if request.method == 'POST' and request.headers.get('Content-Type') == 'application/json':
         try:
@@ -29,7 +30,9 @@ def login_view(request):
     # Caso seja GET, apenas renderiza o formulário normalmente
     return render(request, 'Projeto/login.html')
           
+
 def login(data):
+    print("chegou login(data)")
     email = data.get('email')
     senha = data.get('senha')
 
