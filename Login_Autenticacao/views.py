@@ -1,8 +1,34 @@
+from django.shortcuts import render, redirect
 from .models import *
 from django.contrib.auth.hashers import check_password 
 from django.contrib.auth.hashers import make_password
 import json
+from django.http import JsonResponse
 
+def login_view(request):
+    if request.method == 'POST' and request.headers.get('Content-Type') == 'application/json':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Json inválido'}, status=400)
+        
+        success, msg, user_id, tipo, nome = login(data)
+
+        if success:
+            # Armazenando na sessão
+            request.session['usuario_id'] = user_id
+            request.session['usuario_tipo'] = tipo
+            request.session['usuario_nome'] = nome
+
+        return JsonResponse({
+            'success': success,
+            'message': msg,
+            'redirect_url': '/home' if success else ''
+        })
+
+    # Caso seja GET, apenas renderiza o formulário normalmente
+    return render(request, 'Projeto/login.html')
+          
 def login(data):
     email = data.get('email')
     senha = data.get('senha')
@@ -10,10 +36,19 @@ def login(data):
     try:
         usuario = Usuario.objects.get(email=email)
         if check_password(senha, usuario.senha):
-            return True, "Login realizado com sucesso!", usuario.id
-        return False, "Senha incorreta", None
+            
+            tipo = usuario.tipo  # Cliente ou Barbeiro
+            # Buscar o nome do usuário a partir do tipo
+            if tipo == 'Cliente':
+                nome = Cliente.objects.get(id=usuario.id).nome
+            elif tipo == 'Barbeiro':
+                nome = Barbeiro.objects.get(id=usuario.id).nome
+
+            return True, "Login realizado com sucesso!", usuario.id, tipo, nome
+        
+        return False, "Senha incorreta", None, None, None
     except Usuario.DoesNotExist:
-        return False, "Usuario não encontrado", None
+        return False, "Usuario não encontrado", None, None, None
 
 def cadastro(data):
     nome = data.get('nome')
@@ -65,29 +100,54 @@ def cadastro(data):
     # Se o cadastro foi bem-sucedido, exibe a mensagem de sucesso e redireciona
     return True, "Cadastro realizado com sucesso!"
 
+def home_view(request):
+    # Recupera os dados da sessão
+    tipo = request.session.get('usuario_tipo')
+    nome = request.session.get('usuario_nome')
+
+    if not nome or not tipo:
+        # Usuário não está logado, redireciona para login
+        return redirect('login')
+
+    # Defina ações diferentes dependendo do tipo de usuário
+    if tipo == 'Cliente':
+        acoes = ['Editar Perfil', 'Apagar Perfil', 'Ver Agendamentos']
+    elif tipo == 'Barbeiro':
+        acoes = ['Editar Perfil', 'Apagar Perfil', 'Gerenciar Agenda']
+    else:
+        acoes = []
+
+    return render(request, 'Projeto/home.html', {
+        'nome': nome,
+        'tipo': tipo,
+        'acoes': acoes,
+    })
+
 def editar_perfil(data):
     try:
         usuario = Usuario.objects.get(id=data['usuario_id'])
 
-        perfil = None
         if usuario.tipo == 'Cliente':
-            perfil, _ = Cliente.objects.get_or_create(id=usuario)
+            perfil = Cliente.objects.get(id=usuario)
         elif usuario.tipo == 'Barbeiro':
-            perfil, _ = Barbeiro.objects.get_or_create(id=usuario)
+            perfil = Barbeiro.objects.get(id=usuario)
+        else:
+            return {'status': 'error', 'message': 'Tipo de usuário inválido'}
 
+        # Atualiza o usuário
         usuario.email = data['email']
-        nova_senha = data['senha']
-        if nova_senha:
-            usuario.senha = make_password(nova_senha)
+        if data['senha']:
+            usuario.senha = make_password(data['senha'])
         usuario.save()
 
+        # Atualiza o perfil
         perfil.nome = data['nome']
         perfil.telefone = data['telefone']
         perfil.cidade = data['cidade']
         perfil.save()
 
         return {'status': 'success'}
-    
+
     except Usuario.DoesNotExist:
         return {'status': 'error', 'message': 'Usuário não encontrado'}
     except Exception as e:
@@ -113,3 +173,14 @@ def deletar_perfil(data):
         return {'status': 'error', 'message': 'Usuário não encontrado'}
     except Exception as e:
         return {'status': 'error', 'message': str(e)}
+
+def cadastrar_local(data):
+    nome_local = data.get('nome')
+    endereco = data.get('senha')
+    
+    return True, "Cadastro realizado com sucesso!" 
+
+def logout_view(request):
+    request.session.flush()  # Limpa todos os dados da sessão
+    return redirect('login')  # Redireciona para a página de login
+
