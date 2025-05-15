@@ -52,24 +52,35 @@ def inserir_agendamento(request):
     return render(request, 'inserir_agendamento.html')
 
 def remover_agendamento(request):
-    if request.method == 'POST':
-        cliente_nome = request.POST.get('cliente')
+    if request.method == 'POST' and 'cliente_id' in request.POST:
+        cliente_id = request.POST.get('cliente_id')
+
+        try:
+            cliente = Cliente.objects.get(id=cliente_id)
+        except Cliente.DoesNotExist:
+            messages.error(request, 'Cliente não encontrado.')
+            return render(request, 'remover_agendamento.html')
+
+        agendamentos = Agenda.objects.filter(idcliente=cliente)
+
+        if not agendamentos:
+            messages.error(request, 'Nenhum agendamento encontrado para este cliente.')
+            return render(request, 'remover_agendamento.html')
+
+        return render(request, 'remover_agendamento.html', {'agendamentos': agendamentos})
+
+    if request.method == 'POST' and 'agendamento_id' in request.POST:
         agendamento_id = request.POST.get('agendamento_id')
 
         try:
-            with connection.cursor() as cursor:
-                cursor.execute('SELECT "ID" FROM "Cliente" WHERE "Nome" = %s', [cliente_nome])
-                cliente_id = cursor.fetchone()
-                if cliente_id is None:
-                    return HttpResponse("O cliente nao existe no banco de dados.")
+            agendamento = Agenda.objects.get(id=agendamento_id)
+        except Agenda.DoesNotExist:
+            messages.error(request, 'Agendamento não encontrado.')
+            return render(request, 'remover_agendamento.html')
 
-                cursor.execute('DELETE FROM "Agenda" WHERE "ID" = %s', [agendamento_id])
-                connection.commit()
-                return HttpResponse("Agendamento removido com sucesso!")
-
-        except Exception as e:
-            connection.rollback()
-            return HttpResponse(f"Erro ao remover agendamento: {e}")
+        agendamento.delete()
+        messages.success(request, 'Agendamento removido com sucesso.')
+        return render(request, 'remover_agendamento.html')
 
     return render(request, 'remover_agendamento.html')
 
