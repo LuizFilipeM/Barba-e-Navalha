@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro</title>
+    <style>
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cadastro de Usuário</h1>
+
+    {% if messages %}
+        <ul style="color: red;">
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <label for="nome">Nome completo:</label>
+        <input type="text" name="nome" required>
+
+        <label for="data_nascimento">Data de Nascimento:</label>
+        <input type="date" name="data_nascimento">
+
+        <label for="cpf">CPF:</label>
+        <input type="text" name="cpf" maxlength="11" placeholder="Apenas números">
+
+        <label for="email">Email:</label>
+        <input type="email" name="email">
+
+        <label for="telefone">Telefone:</label>
+        <input type="tel" name="telefone">
+
+        <label for="cidade">Cidade:</label>
+        <input type="text" name="cidade">
+
+        <label for="tipo">Tipo:</label>
+        <select name="tipo" id="tipo" required onchange="exibirCamposEspecificos()">
+            <option value="">Selecione o tipo</option>
+            <option value="Cliente">Cliente</option>
+            <option value="Barbeiro">Barbeiro</option>
+        </select>
+
+        <label for="senha">Senha:</label>
+        <input type="password" name="senha" required>
+
+        <br><br>
+        <div style="margin-top: 15px;">
+            <button type="submit" style="display: inline-block;">Cadastrar</button>
+            <a href="{% url 'login' %}" style="display: inline-block; margin-left: 10px;">Voltar para Home</a>
+        </div>
+    </form>
+</body>
+<script>
+    function enviarCadastro(event) {
+        event.preventDefault();  // Impede o envio tradicional do formulário
+
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        const data = {
+            nome: document.querySelector('[name=nome]').value,
+            data_nascimento: document.querySelector('[name=data_nascimento]').value,
+            cpf: document.querySelector('[name=cpf]').value,
+            email: document.querySelector('[name=email]').value,
+            telefone: document.querySelector('[name=telefone]').value,
+            cidade: document.querySelector('[name=cidade]').value,
+            tipo: document.querySelector('[name=tipo]').value,
+            senha: document.querySelector('[name=senha]').value
+        };
+
+        fetch("{% url 'cadastro' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            alert(result.message);
+            if (result.success) {
+                window.location.href = "{% url 'login' %}";
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert("Erro ao enviar os dados.");
+        });
+    }
+
+    // Substitui o submit padrão pelo envio via JS
+    document.querySelector('form').addEventListener('submit', enviarCadastro);
+</script>
+
+</html>
