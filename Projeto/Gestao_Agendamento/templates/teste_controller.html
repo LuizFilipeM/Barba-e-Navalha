@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Teste de Agendamento (JSON)</title>
+</head>
+<body>
+  <h2>Inserir Agendamento</h2>
+  <button onclick="inserirAgendamento()">Inserir</button>
+
+  <h2>Remover Agendamento</h2>
+  <button onclick="removerAgendamento()">Remover</button>
+
+  <h2>Atualizar Agendamento</h2>
+  <button onclick="atualizarAgendamento()">Atualizar</button>
+
+  <h2>Listar Agendamentos</h2>
+  <button onclick="listarAgendamentos()">Listar</button>
+
+  <pre id="output"></pre>
+
+  <script>
+    const output = document.getElementById('output');
+
+    function inserirAgendamento() {
+      const dados = {
+        cliente: "João Silva",
+        barbeiro: "Lucas Barbeiro",
+        servico: 1,
+        data: "25-05-2025",
+        horario: "15:00"
+      };
+
+      fetch("/inserir-agendamento/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados)
+      })
+      .then(res => res.json())
+      .then(json => output.textContent = JSON.stringify(json, null, 2));
+    }
+
+    function removerAgendamento() {
+      const dados = { agendamento_id: 28 };
+
+      fetch("/remover-agendamento/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados)
+      })
+      .then(res => res.json())
+      .then(json => output.textContent = JSON.stringify(json, null, 2));
+    }
+
+    function atualizarAgendamento() {
+      const dados = {
+        agendamento_id: 20,
+        cliente_id: 2,
+        data: "2025-05-25",
+        hora: "16:00",
+        servico: 2
+      };
+
+      fetch("/atualizar-agendamento/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados)
+      })
+      .then(res => res.json())
+      .then(json => output.textContent = JSON.stringify(json, null, 2));
+    }
+
+    function listarAgendamentos() {
+      const cliente = "João";
+
+      fetch(`/lista-agendamentos/?cliente=${encodeURIComponent(cliente)}`)
+        .then(res => res.json())
+        .then(json => output.textContent = JSON.stringify(json, null, 2));
+    }
+  </script>
+</body>
+</html>
