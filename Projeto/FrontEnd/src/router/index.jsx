@@ -8,7 +8,7 @@ export function Routes() {
   const { isAuthenticated, user } = useAuth()
 
   if (isAuthenticated && user) {
-    return Number(user.tipo) === "Cliente" ? <RouteClient /> : <RouteBarber />
+    return user.tipo === "Cliente" ? <RouteClient /> : <RouteBarber />
   } else {
     return <AuthRoutes />
   }
