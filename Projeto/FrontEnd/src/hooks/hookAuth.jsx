@@ -34,7 +34,7 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  async function signIn({ email, password }) {
+  /*async function signIn({ email, password }) {
     const foundUser = mockUsers.find(
       user => user.email === email && user.password === password
     )
@@ -57,15 +57,16 @@ export function AuthProvider({ children }) {
     }
 
     return { success: false, message: "E-mail não encontrado!" }
-  }
+  }*/
 
-  /*async function signIn({ email, password }) {
-    try {
-      const response = await api.post("/api/login/", {
-        email,
-        password
-      })
-
+  async function signIn({ email, password }) {
+    
+    const response = await api.post("/api/login/", {
+      email,
+      password
+    })
+    if (response.data.success === true) {
+      
       const userData = response.data
       const token = userData.token
 
@@ -76,14 +77,13 @@ export function AuthProvider({ children }) {
       localStorage.setItem("token", token)
 
       return { success: true, token }
-    } catch (error) {
-      if (error.response && error.response.status === 401) {
-        return { success: false, message: "Credenciais inválidas!" }
-      }
-
+    } else {
+     
+      return { success: false, message: "Credenciais inválidas!" }
+      
       return { success: false, message: "Erro ao conectar com o servidor." }
     }
-  }*/
+  }
 
   function signOut() {
     setUser(null)

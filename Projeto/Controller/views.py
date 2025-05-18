@@ -25,7 +25,7 @@ def processar_requisicao(request):
 
         if not data:
             return JsonResponse(
-                {"success": False, "message": "Ação ou dados não fornecidos"},
+                {"success": False, "message": "Dados não fornecidos"},
                 status=400,
             )
 
@@ -43,7 +43,7 @@ def processar_requisicao(request):
                 {
                     "success": success,
                     "message": msg,
-                    "redirect_url": "/home" if success else "",
+                    "tipo": tipo,
                 }
             )
 
@@ -54,7 +54,6 @@ def processar_requisicao(request):
                 {
                     "success": success,
                     "message": msg,
-                    "redirect_url": "/api/login" if success else "",
                 }
             )
 
@@ -123,7 +122,7 @@ def processar_requisicao(request):
     return JsonResponse(
         {
             "success": False,
-            "message": "Método não suportado",
+            "message": "Metodo nao suportado",
             "redirect_url":"",
         }
     )

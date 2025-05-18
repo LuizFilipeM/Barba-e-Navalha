@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class ProjetoConfig(AppConfig):
+class LoginAutenticacaoConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "Projeto"
+    name = "Projeto.Login_Autenticacao"

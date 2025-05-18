@@ -12,7 +12,6 @@ from django.contrib import messages
 def teste_controller(request):
     return render(request, "teste_controller.html")
 
-
 @csrf_exempt
 def inserir_agendamento(request):
     if request.method == "POST":
@@ -86,7 +85,6 @@ def inserir_agendamento(request):
 
     return JsonResponse({"success": False, "message": "Método inválido"})
 
-
 @csrf_exempt
 def remover_agendamento(request):
     if request.method == "POST":
@@ -107,7 +105,6 @@ def remover_agendamento(request):
             return JsonResponse({"success": False, "message": str(e)})
 
     return JsonResponse({"success": False, "message": "Método inválido"})
-
 
 @csrf_exempt
 def atualiza_agendamento(request):
@@ -139,7 +136,6 @@ def atualiza_agendamento(request):
             return JsonResponse({"success": False, "message": str(e)})
 
     return JsonResponse({"success": False, "message": "Método inválido"})
-
 
 def lista_agendamentos(request):
     cliente_nome = request.GET.get("cliente")

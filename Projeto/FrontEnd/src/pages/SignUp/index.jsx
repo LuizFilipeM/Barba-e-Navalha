@@ -9,14 +9,19 @@ import { Footer } from "../../components/Footer";
 
 import { Container, Context, Form, Title, Select, BackLinkWrapper } from "./style";
 
+const TipoUsuario = {
+  Cliente: "0",
+  Barbeiro: "1",
+};
+
 export function SignUp() {
   const [formData, setFormData] = useState({
-    tipo: "0",
+    tipo: TipoUsuario.Cliente,
     name: "",
     cpf: "",
     telefone: "",
     cidade: "",
-    dataNascimento: "",
+    data_nascimento: "",
     email: "",
     password: "",
   });
@@ -34,7 +39,7 @@ export function SignUp() {
       { nome: "CPF", valor: formData.cpf },
       { nome: "Telefone", valor: formData.telefone },
       { nome: "Cidade", valor: formData.cidade },
-      { nome: "Data de Nascimento", valor: formData.dataNascimento },
+      { nome: "Data de Nascimento", valor: formData.data_nascimento },
       { nome: "E-mail", valor: formData.email },
       { nome: "Senha", valor: formData.password },
     ];
@@ -50,15 +55,20 @@ export function SignUp() {
 
   function limparCampos() {
     setFormData({
-      tipo: "0",
+      tipo: TipoUsuario.Cliente,
       name: "",
       cpf: "",
       telefone: "",
       cidade: "",
-      dataNascimento: "",
+      data_nascimento: "",
       email: "",
       password: "",
     });
+  }
+
+  function formatarData(data) {
+    const [dia, mes, ano] = data.split("/");
+    return `${ano}-${mes}-${dia}`;
   }
 
   async function handleSignUp(e) {
@@ -72,20 +82,24 @@ export function SignUp() {
 
     const dados = {
       ...formData,
+      tipo: formData.tipo === TipoUsuario.Cliente ? "Cliente" : "Barbeiro",
+      data_nascimento: formatarData(formData.data_nascimento),
       token: btoa(`${formData.email}:${Date.now()}`),
     };
 
-    try {
-      await api.post("/api/cadastro/", dados, {
-        headers: { "Content-Type": "application/json" },
-      });
-
-      alert("Cadastro realizado com sucesso! ✅");
+   
+    const response = await api.post("/api/cadastro/", dados, {
+      headers: { "Content-Type": "application/json" },
+    });
+    console.log(response.data);
+    if (response.data.success) {
+      console.log("Sucesso");
+      alert("Cadastro realizado com sucesso! ");
       limparCampos();
       navigate("/");
-    } catch (erro) {
-      const msg = erro.response?.data?.message || "Erro ao cadastrar usuário!";
-      alert(`Erro: ${msg}`);
+    } else {
+      alert("Erro: " + response.data.msg);
+      limparCampos();
     }
   }
 
@@ -106,8 +120,8 @@ export function SignUp() {
           <Form onSubmit={handleSignUp}>
             <label htmlFor="tipo">Tipo de usuário</label>
             <Select id="tipo" name="tipo" value={formData.tipo} onChange={handleChange}>
-              <option value="0">Cliente</option>
-              <option value="1">Barbeiro</option>
+              <option value={TipoUsuario.Cliente}>Cliente</option>
+              <option value={TipoUsuario.Barbeiro}>Barbeiro</option>
             </Select>
 
             <Input name="name" label="Nome" placeholder="Nome" type="text" value={formData.name} onChange={handleChange} />
@@ -115,11 +129,11 @@ export function SignUp() {
             <Input name="telefone" label="Telefone" placeholder="Telefone" type="text" value={formData.telefone} onChange={handleChange} />
             <Input name="cidade" label="Cidade" placeholder="Cidade" type="text" value={formData.cidade} onChange={handleChange} />
             <Input
-              name="dataNascimento"
+              name="data_nascimento"
               label="Data de Nascimento"
               placeholder="DD/MM/AAAA"
               type="text"
-              value={formData.dataNascimento}
+              value={formData.data_nascimento}
               onChange={handleChange}
             />
             <Input name="email" label="E-mail" placeholder="E-mail" type="email" value={formData.email} onChange={handleChange} />
@@ -138,3 +152,4 @@ export function SignUp() {
     </>
   );
 }
+

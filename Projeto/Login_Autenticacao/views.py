@@ -3,19 +3,20 @@ from django.contrib.auth.hashers import check_password
 from django.contrib.auth.hashers import make_password
 import json
 from django.http import JsonResponse
-from Projeto.Gestao_Agendamento.models import Usuario, Cliente, Barbeiro
+from .models import Usuario, Cliente, Barbeiro
 
 
 def login(data):
     print("chegou login(data)")
     email = data.get("email")
-    senha = data.get("senha")
-
+    senha = data.get("password")
+    
     try:
         usuario = Usuario.objects.get(email=email)
         if check_password(senha, usuario.senha):
 
             tipo = usuario.tipo  # Cliente ou Barbeiro
+            print("Tipo de usuário:", tipo)
             # Buscar o nome do usuário a partir do tipo
             if tipo == "Cliente":
                 nome = Cliente.objects.get(id=usuario.id).nome
@@ -26,21 +27,22 @@ def login(data):
 
         return False, "Senha incorreta", None, None, None
     except Usuario.DoesNotExist:
+        print("Usuario não encontrado")
         return False, "Usuario não encontrado", None, None, None
 
-
 def cadastro(data):
-    nome = data.get("nome")
-    senha = data.get("senha")
+    nome = data.get("name")
+    senha = data.get("password")
     tipo = data.get("tipo")
     telefone = data.get("telefone")
-    data_nascimento = data.get("data_nascimento")
+    data_nascimento = data.get("dataNascimento")
     email = data.get("email")
     cidade = data.get("cidade")
     cpf = data.get("cpf")
 
     # Verifica se login já existe
     if Usuario.objects.filter(email=email).exists():
+        print("Email já cadastrado")
         return False, "Email já cadastrado"
 
     # Criação do usuário (com senha criptografada)
@@ -75,7 +77,6 @@ def cadastro(data):
     # Se o cadastro foi bem-sucedido, exibe a mensagem de sucesso e redireciona
     return True, "Cadastro realizado com sucesso!"
 
-
 def editar_perfil(data):
     try:
         usuario = Usuario.objects.get(id=data["usuario_id"])
@@ -106,7 +107,6 @@ def editar_perfil(data):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-
 def deletar_perfil(data):
     try:
         usuario = Usuario.objects.get(id=data["usuario_id"])
@@ -127,7 +127,6 @@ def deletar_perfil(data):
         return {"status": "error", "message": "Usuário não encontrado"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
-
 
 def cadastrar_local(data):
     nome_local = data.get("nome")
