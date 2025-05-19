@@ -7,7 +7,7 @@ from .models import Usuario, Cliente, Barbeiro
 
 
 def login(data):
-    print("chegou login(data)")
+    
     email = data.get("email")
     senha = data.get("password")
     
@@ -16,7 +16,6 @@ def login(data):
         if check_password(senha, usuario.senha):
 
             tipo = usuario.tipo  # Cliente ou Barbeiro
-            print("Tipo de usuário:", tipo)
             # Buscar o nome do usuário a partir do tipo
             if tipo == "Cliente":
                 nome = Cliente.objects.get(id=usuario.id).nome
@@ -27,7 +26,6 @@ def login(data):
 
         return False, "Senha incorreta", None, None, None
     except Usuario.DoesNotExist:
-        print("Usuario não encontrado")
         return False, "Usuario não encontrado", None, None, None
 
 def cadastro(data):

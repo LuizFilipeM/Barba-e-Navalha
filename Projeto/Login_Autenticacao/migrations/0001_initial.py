@@ -157,7 +157,7 @@ class Migration(migrations.Migration):
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         primary_key=True,
                         serialize=False,
-                        to="Projeto.usuario",
+                        to="Login_Autenticacao.usuario",
                     ),
                 ),
                 (
@@ -206,7 +206,7 @@ class Migration(migrations.Migration):
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         primary_key=True,
                         serialize=False,
-                        to="Projeto.usuario",
+                        to="Login_Autenticacao.usuario",
                     ),
                 ),
                 (

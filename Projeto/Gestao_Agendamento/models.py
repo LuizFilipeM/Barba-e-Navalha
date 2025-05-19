@@ -8,7 +8,7 @@ class Usuario(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'Usuario'
+        db_table = ''
 
 class Barbeiro(models.Model):
     id = models.OneToOneField('Usuario', models.DO_NOTHING, db_column='ID', primary_key=True)  # Field name made lowercase.

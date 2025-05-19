@@ -91,14 +91,13 @@ export function SignUp() {
     const response = await api.post("/api/cadastro/", dados, {
       headers: { "Content-Type": "application/json" },
     });
-    console.log(response.data);
+
     if (response.data.success) {
-      console.log("Sucesso");
       alert("Cadastro realizado com sucesso! ");
       limparCampos();
       navigate("/");
     } else {
-      alert("Erro: " + response.data.msg);
+      alert("Erro: " + response.data.message);
       limparCampos();
     }
   }

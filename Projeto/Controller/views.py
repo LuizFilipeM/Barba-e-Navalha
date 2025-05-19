@@ -11,6 +11,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
 def processar_requisicao(request):
+    print(request.path)
+    
     if (
         request.method == "POST"
         and request.headers.get("Content-Type") == "application/json"
@@ -78,51 +80,24 @@ def processar_requisicao(request):
             )
 
         # Agendamento
-        elif url == "/agendar/":
-            success, msg = inserir_agendamento(data)
-            return JsonResponse(
-                {
-                    "success": success,
-                    "message": msg,
-                    "redirect_url": "/home" if success else "",
-                }
-            )
+        elif url == "/inserir-agendamento/":
+            return inserir_agendamento(data)
+            
+        elif url == "/atualizar-agendamento/":
+            return atualiza_agendamento(data)
+            
+        elif url == "/listar-agendamentos/":
+            return lista_agendamentos(data)
+            
 
-        elif url == "/atualizar_agendamento/":
-            success, msg = atualiza_agendamento(data)
-            return JsonResponse(
-                {
-                    "success": success,
-                    "message": msg,
-                    "redirect_url": "/home" if success else "",
-                }
-            )
-
-        elif url == "/listar_agendamentos/":
-            success, msg = lista_agendamentos(data)
-            return JsonResponse(
-                {
-                    "success": success,
-                    "message": msg,
-                    "redirect_url": "/home" if success else "",
-                }
-            )
-
-        elif url == "/remover_agendamento/":
-            success, msg = remover_agendamento(data)
-            return JsonResponse(
-                {
-                    "success": success,
-                    "message": msg,
-                    "redirect_url": "/home" if success else "",
-                }
-            )
+        elif url == "/remover-agendamento/":
+            return remover_agendamento(data)
+            
 
     # Caso seja GET, apenas renderiza o formulário normalmente
     return JsonResponse(
         {
             "success": False,
             "message": "Metodo nao suportado",
-            "redirect_url":"",
         }
     )
