@@ -12,15 +12,25 @@ export function AuthProvider({ children }) {
   const mockUsers = [
     {
       id: 1,
+      tipo: "Cliente", // Cliente
+      name: "João",
+      cpf: "12345678901",
+      telefone: "11999999999",
+      cidade: "Rio de Janeiro",
+      data_nascimento: "2000-01-01",
       email: "cliente@email.com",
       password: "123456",
-      tipo: "0" // Cliente
     },
     {
       id: 2,
+      tipo: "Barbeiro", // Barbeiro
+      name: "Maria",
+      cpf: "12345678902",
+      telefone: "11999999998",
+      cidade: "Rio de Janeiro",
+      data_nascimento: "2000-01-01",
       email: "barbeiro@email.com",
       password: "123456",
-      tipo: "1" // Barbeiro
     }
   ]
 
@@ -34,7 +44,7 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  /*async function signIn({ email, password }) {
+  async function signIn({ email, password }) {
     const foundUser = mockUsers.find(
       user => user.email === email && user.password === password
     )
@@ -57,9 +67,9 @@ export function AuthProvider({ children }) {
     }
 
     return { success: false, message: "E-mail não encontrado!" }
-  }*/
+  }
 
-  async function signIn({ email, password }) {
+  /*async function signIn({ email, password }) {
     
     const response = await api.post("/api/login/", {
       email,
@@ -83,7 +93,7 @@ export function AuthProvider({ children }) {
       
       return { success: false, message: "Erro ao conectar com o servidor." }
     }
-  }
+  }*/
 
   function signOut() {
     setUser(null)

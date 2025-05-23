@@ -19,6 +19,12 @@ export const Title = styled.h1`
   color: #333;
 `;
 
+export const TitleH1 = styled.h1`
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: white;
+`;
+
 export const Paragraph = styled.p`
   font-size: 1rem;
   color: #444;
@@ -52,7 +58,7 @@ export const List = styled.ul`
 export const RegisterLink = styled.div`
   text-align: center;
   margin-top: 2rem;
-  padding: 14rem;
+  padding: 12rem;
 
   a {
     text-decoration: none;

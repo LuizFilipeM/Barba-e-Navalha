@@ -3,7 +3,7 @@ import { useLocal } from "../../hooks/hookLocal";
 
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
-import { Container, Context, Title, Paragraph, SubTitle, List, RegisterLink } from "./style";
+import { Container, Context, Title, TitleH1, Paragraph, SubTitle, List, RegisterLink } from "./style";
 
 import { Link } from "react-router-dom";
 
@@ -16,7 +16,8 @@ export function Barber() {
       <Header
         links={[
           { label: "Home", to: "/" },
-          { label: "Perfil", to: "/" },
+          { label: "Pedidos", to: "/" },
+          { label: "Perfil", to: "/profile" },
           { label: "Sair", onClick: signOut },
         ]}
       />
@@ -56,6 +57,7 @@ export function Barber() {
         </Context>
       ) : (
         <RegisterLink>
+          <TitleH1 >Você não possui uma barbearia cadastrada!</TitleH1>
           <Link to="/barbershop">Cadastrar barbearia</Link>
         </RegisterLink>
       )}

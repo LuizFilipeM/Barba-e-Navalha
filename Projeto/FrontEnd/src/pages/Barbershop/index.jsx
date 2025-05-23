@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../../services/api";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/hookAuth";
 
 import { Input } from "../../components/Input";
@@ -11,14 +11,18 @@ import { Footer } from "../../components/Footer";
 import { Container, Context, Title, StyledLink } from "./style";
 
 export function BarberShop() {
-  
-  const [nomeLocal, setNomeLocal] = useState("");
-  const [rua, setRua] = useState("");
-  const [bairro, setBairro] = useState("");
-  const [cidadeLocal, setCidadeLocal] = useState("");
-  const [cnpj, setCnpj] = useState("");
-  const [token, setToken] = useState("");
+  const navigate = useNavigate();
   const { signOut } = useAuth();
+
+  const [formData, setFormData] = useState({
+    nomeLocal: "",
+    rua: "",
+    bairro: "",
+    cidadeLocal: "",
+    cnpj: "",
+  });
+
+  const [token, setToken] = useState("");
 
   useEffect(() => {
     const tokenUser = localStorage.getItem("token");
@@ -27,52 +31,72 @@ export function BarberShop() {
     }
   }, []);
 
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
   function validarCampos() {
-    if (!nomeLocal.trim()) return "Preencha o nome do local.";
-    if (!rua.trim()) return "Preencha a rua.";
-    if (!bairro.trim()) return "Preencha o bairro.";
-    if (!cidadeLocal.trim()) return "Preencha a cidade.";
-    if (!cnpj.trim()) return "Preencha o CNPJ.";
-    if (!token) return "Usuário não autenticado.";
+    const campos = [
+      { nome: "Nome do Local", valor: formData.nomeLocal },
+      { nome: "Rua", valor: formData.rua },
+      { nome: "Bairro", valor: formData.bairro },
+      { nome: "Cidade do Local", valor: formData.cidadeLocal },
+      { nome: "CNPJ", valor: formData.cnpj },
+    ];
+
+    for (const campo of campos) {
+      if (!campo.valor.trim()) {
+        return `Preencha o campo: ${campo.nome}`;
+      }
+    }
+
+    if (!token) {
+      return "Usuário não autenticado.";
+    }
+
     return null;
   }
 
-  async function handleSignUp() {
+  function limparCampos() {
+    setFormData({
+      nomeLocal: "",
+      rua: "",
+      bairro: "",
+      cidadeLocal: "",
+      cnpj: "",
+    });
+  }
+
+  async function handleSignUpBarber() {
     const erro = validarCampos();
     if (erro) {
       alert(erro);
       return;
     }
 
-    const newLocal = {
-      nomeLocal,
-      rua,
-      bairro,
-      cidadeLocal,
-      cnpj,
+    const dados = {
+      ...formData,
+      token: token,
     };
 
-    try {
-      await api.post("/locals", newLocal, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    const response = await api.post("/locals", dados, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
+    if (response.data.success) {
       alert("Cadastro realizado com sucesso! ✅");
-
-      setNomeLocal("");
-      setRua("");
-      setBairro("");
-      setCidadeLocal("");
-      setCnpj("");
-
-    } catch (error) {
-      const msg = error.response?.data?.message || "Erro ao cadastrar local.";
-      alert(`Erro: ${msg}`);
+      limparCampos();
+      navigate("/");
+    } else {
+      alert("Erro: " + response.data.message);
     }
   }
-
 
   return (
     <Container>
@@ -90,44 +114,49 @@ export function BarberShop() {
         <Input
           placeholder="Nome do Local"
           type="text"
-          value={nomeLocal}
-          onChange={(e) => setNomeLocal(e.target.value)}
+          name="nomeLocal"
+          value={formData.nomeLocal}
+          onChange={handleChange}
           label="Nome do Local"
         />
 
         <Input
           placeholder="Rua"
           type="text"
-          value={rua}
-          onChange={(e) => setRua(e.target.value)}
+          name="rua"
+          value={formData.rua}
+          onChange={handleChange}
           label="Rua"
         />
 
         <Input
           placeholder="Bairro"
           type="text"
-          value={bairro}
-          onChange={(e) => setBairro(e.target.value)}
+          name="bairro"
+          value={formData.bairro}
+          onChange={handleChange}
           label="Bairro"
         />
 
         <Input
           placeholder="Cidade"
           type="text"
-          value={cidadeLocal}
-          onChange={(e) => setCidadeLocal(e.target.value)}
+          name="cidadeLocal"
+          value={formData.cidadeLocal}
+          onChange={handleChange}
           label="Cidade"
         />
 
         <Input
           placeholder="CNPJ"
           type="text"
-          value={cnpj}
-          onChange={(e) => setCnpj(e.target.value)}
+          name="cnpj"
+          value={formData.cnpj}
+          onChange={handleChange}
           label="CNPJ"
         />
 
-        <Button title="Cadastrar" onClick={handleSignUp} />
+        <Button title="Cadastrar" onClick={handleSignUpBarber} />
 
         <StyledLink>
           <Link to="/">Voltar</Link>

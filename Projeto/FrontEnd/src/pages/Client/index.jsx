@@ -26,7 +26,7 @@ export function Client() {
         links={[
           { label: "Home", to: "/" },
           { label: "Pedidos", to: "/" },
-          { label: "Perfil", to: "/" },
+          { label: "Perfil", to: "/profile" },
           { label: "Sair", onClick: signOut },
         ]}
       />
