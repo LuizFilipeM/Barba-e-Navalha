@@ -2,20 +2,19 @@ from Projeto.Controller import views
 from django.urls import path
 
 
-# teste local
+# Teste local
 urlpatterns = [
     #    AGENDAMENTO
-    path("inserir-agendamento/", views.processar_requisicao, name="inserir_agendamento"),
-    path("remover-agendamento/", views.processar_requisicao, name="remover_agendamento"),
-    path("atualizar-agendamento/", views.processar_requisicao, name="atualizar_agendamento"),
-    path("listar-agendamentos/", views.processar_requisicao, name="listar_agendamentos"),
-    
-    #    PERFIL
-    path("meu-perfil/editar/", views.processar_requisicao, name="editar_perfil"),
-    path("meu-perfil/deletar/", views.processar_requisicao, name="deletar_perfil"),
-    
+    path("inserir-agendamento/", views.inserir_agendamento_view, name="inserir_agendamento"),
+    path("remover-agendamento/", views.remover_agendamento_view, name="remover_agendamento"),
+    path("atualizar-agendamento/", views.atualizar_agendamento_view, name="atualizar_agendamento"),
+    path("listar-agendamentos/", views.listar_agendamentos_view, name="listar_agendamentos"),
+
+    #    PERFIL ################## A FAZER ######################
+    #path("meu-perfil/editar/", views.editar_perfil_view, name="editar_perfil"),
+    #path("meu-perfil/deletar/", views.deletar_perfil_view, name="deletar_perfil"),
+
     #    LOGIN E CADASTRO
-    path("api/cadastro/", views.processar_requisicao, name="api_cadastro"),
-    path("api/login/", views.processar_requisicao, name="api_login"),
-    path("api/locals/", views.processar_requisicao, name="api_locals"),
+    path("api/cadastro/", views.cadastro_view, name="api_cadastro"),
+    path("api/login/", views.login_view, name="api_login"),
 ]

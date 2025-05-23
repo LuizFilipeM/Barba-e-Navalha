@@ -50,6 +50,7 @@ CREATE TABLE public."Barbeiro"
 ALTER TABLE IF EXISTS public."Barbeiro"
     OWNER to "navalha";
 
+-- Adicionado a coluna IDServicos à tabela Agenda como chave estrangeira
 CREATE TABLE public."Agenda"
 (
     "ID" serial,
@@ -72,7 +73,7 @@ CREATE TABLE public."Agenda"
 
 ALTER TABLE IF EXISTS public."Agenda"
     OWNER to "navalha";
-
+-- hora inicio e hora fim virou horarios (TIME) e adicionado idLocal com fk Local
 CREATE TABLE public."Horarios"
 (
     "ID" serial,
@@ -84,19 +85,19 @@ CREATE TABLE public."Horarios"
 
 ALTER TABLE IF EXISTS public."Horarios"
     OWNER to "navalha";
-
+-- Adicionado IDlocal(fk Local) e Tempo
 CREATE TABLE public."Servicos"
 (
     "ID" serial,
     "Nome" character varying(255),
-    "Descircao" character varying(255),
+    "Descricao" character varying(255),
     "Preco" decimal(5,2),
     PRIMARY KEY ("ID")
 );
 
 ALTER TABLE IF EXISTS public."Servicos"
     OWNER to "navalha";
-
+--IDhorarios e IDServicos removidos
 CREATE TABLE public."Local"
 (
     "ID" serial,

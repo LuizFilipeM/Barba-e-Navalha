@@ -33,7 +33,7 @@ def cadastro(data):
     senha = data.get("password")
     tipo = data.get("tipo")
     telefone = data.get("telefone")
-    data_nascimento = data.get("dataNascimento")
+    data_nascimento = data.get("data_nascimento")
     email = data.get("email")
     cidade = data.get("cidade")
     cpf = data.get("cpf")
@@ -131,4 +131,3 @@ def cadastrar_local(data):
     endereco = data.get("senha")
 
     return True, "Cadastro realizado com sucesso!"
-
