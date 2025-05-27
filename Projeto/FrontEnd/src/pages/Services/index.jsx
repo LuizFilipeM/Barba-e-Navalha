@@ -41,7 +41,6 @@ export function Services() {
   function validarCampos() {
     const campos = [
       { nome: "Nome do Serviço", valor: formData.nomeServico},
-      { nome: "Descrição", valor: formData.descricao},
       { nome: "Preço", valor: formData.preco},
       { nome: "Duração", valor: formData.duracao},
     ];
@@ -77,6 +76,7 @@ export function Services() {
 
     const dados = {
       ...formData,
+      descricao: formData.descricao || null,
       token: token,
     };
 
