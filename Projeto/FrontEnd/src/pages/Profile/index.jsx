@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
 
 import { useAuth } from "../../hooks/hookAuth";
+
 import { Header } from "../../components/Header";
 import { Button } from "../../components/Button";
 import { Footer } from "../../components/Footer";
@@ -10,6 +12,7 @@ import { Container, Context, ProfileInfo, ProfileForm } from "./style";
 
 export function Profile() {
     const { signOut, user, setUser } = useAuth();
+    const navigate = useNavigate();
 
     const [isEditing, setIsEditing] = useState(false);
 
@@ -54,7 +57,8 @@ export function Profile() {
 
         if (response.data.success) {
             alert("Dados atualizados com sucesso!");
-            setUser({
+
+            const updatedUser = {
                 ...user,
                 name: formData.name,
                 email: formData.email,
@@ -62,13 +66,20 @@ export function Profile() {
                 telefone: formData.telefone,
                 cidade: formData.cidade,
                 data_nascimento: formData.data_nascimento,
-            });
+                password: formData.newPassword ? formData.newPassword : formData.oldPassword,
+            };
+
+            setUser(updatedUser);
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+
             setIsEditing(false);
             setFormData({ ...formData, oldPassword: "", newPassword: "", confirmNewPassword: "" });
+            navigate("/");
         } else {
             alert("Erro ao atualizar dados.");
         }
     }
+
 
     async function handleDeleteAccount() {
         const confirmDelete = window.confirm(
@@ -130,7 +141,7 @@ export function Profile() {
                                 type="text"
                                 name="cpf"
                                 value={formData.cpf}
-                                onChange={handleChange}
+                                style={{ backgroundColor: 'rgb(166, 168, 173)', color: 'black' }}
                             />
                         </label>
 
@@ -160,7 +171,7 @@ export function Profile() {
                                 type="date"
                                 name="data_nascimento"
                                 value={formData.data_nascimento}
-                                onChange={handleChange}
+                                style={{ backgroundColor: 'rgb(166, 168, 173)', color: 'black' }}
                             />
                         </label>
 
@@ -183,7 +194,7 @@ export function Profile() {
                                 name="oldPassword"
                                 value={formData.oldPassword}
                                 onChange={handleChange}
-                                placeholder="Digite sua senha atual"
+                                placeholder="Digite sua senha atual para confirmar a alteração."
                                 required
                             />
                         </label>
@@ -195,7 +206,7 @@ export function Profile() {
                                 name="newPassword"
                                 value={formData.newPassword}
                                 onChange={handleChange}
-                                placeholder="Deixe em branco se não quiser alterar"
+                                placeholder="Digite uma nova senha, ou deixe em branco para manter a senha atual."
                             />
                         </label>
 
@@ -206,7 +217,7 @@ export function Profile() {
                                 name="confirmNewPassword"
                                 value={formData.confirmNewPassword}
                                 onChange={handleChange}
-                                placeholder="Confirme a nova senha"
+                                placeholder="Confirme a nova senha."
                             />
                         </label>
 

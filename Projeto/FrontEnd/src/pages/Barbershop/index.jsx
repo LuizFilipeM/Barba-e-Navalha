@@ -103,13 +103,13 @@ export function BarberShop() {
       <Header
         links={[
           { label: "Home", to: "/" },
-          { label: "Perfil", to: "/" },
+          { label: "Perfil", to: "/profile" },
           { label: "Sair", onClick: signOut },
         ]}
       />
 
       <Context>
-        <Title>Faça o cadastro do local</Title>
+        <Title>Faça o cadastro do Local</Title>
 
         <Input
           placeholder="Nome do Local"

@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const Container = styled.section`
-    background-color: #111827;
+  background-color: #111827;
 `;
 
 export const Context = styled.section`

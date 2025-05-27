@@ -1,11 +1,11 @@
 import { useAuth } from "../../hooks/hookAuth";
 import { useLocal } from "../../hooks/hookLocal";
+import { Link } from "react-router-dom";
 
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
-import { Container, Context, Title, TitleH1, Paragraph, SubTitle, List, RegisterLink } from "./style";
 
-import { Link } from "react-router-dom";
+import { Container, Context, Title, TitleH1, Paragraph, SubTitle, List, RegisterLink } from "./style";
 
 export function Barber() {
   const { signOut } = useAuth();
@@ -16,7 +16,7 @@ export function Barber() {
       <Header
         links={[
           { label: "Home", to: "/" },
-          { label: "Pedidos", to: "/" },
+          { label: "Agenda", to: "/calendar" },
           { label: "Perfil", to: "/profile" },
           { label: "Sair", onClick: signOut },
         ]}
@@ -54,11 +54,15 @@ export function Barber() {
               </List>
             </>
           )}
+          {/*<Link to="/services">Cadastrar Serviços</Link>
+          <Link to="/schedule">Cadastrar Horarios</Link>*/}
         </Context>
       ) : (
         <RegisterLink>
           <TitleH1 >Você não possui uma barbearia cadastrada!</TitleH1>
-          <Link to="/barbershop">Cadastrar barbearia</Link>
+          <Link to="/barbershop">Cadastrar Barbearia</Link>
+          <Link to="/services">Cadastrar Serviços</Link>
+          <Link to="/schedule">Cadastrar Horarios</Link>
         </RegisterLink>
       )}
 
