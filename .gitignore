@@ -1,1 +1,13 @@
 venv/
+BD_OCN.sql
+BD2_OCN.sql
+db.sqlite3
+manage.py
+TESTE.txt
+Projeto.wsgi.py
+Projeto.url.py
+Projeto.asgi.py
+Projeto.settings.py
+.gitignore
+__pycache__/
+Projeto.__pycache__/
