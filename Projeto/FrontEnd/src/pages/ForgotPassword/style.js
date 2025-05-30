@@ -3,7 +3,7 @@ import styled from "styled-components";
 export const Container = styled.section`
   background-color: #111827;
   color: white;
-  padding: 5rem 0;
+  padding: 8rem 0;
 `;
 
 export const Context = styled.main`

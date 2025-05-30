@@ -1,34 +1,29 @@
 import { useState } from "react"
 import { Link, useNavigate} from "react-router-dom"
+import { api } from "../../services/api"
 
 import { Header } from "../../components/Header"
 import { Input } from "../../components/Input"
 import { Button } from "../../components/Button"
-import { useAuth } from "../../hooks/hookAuth"
 import { Footer } from "../../components/Footer"
 
 import { Container, Context, Form, Title, BackLinkWrapper } from "./style";
 
-export function SignIn() {
+export function ForgotPassword() {
   const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const { signIn } = useAuth()
 
   const navigate = useNavigate()
 
   async function handleSignIn(event) {
     event.preventDefault();
 
-    if (!email || !password) {
+    if (!email) {
       return alert("⚠️ Preencha todos os campos!")
     }
 
-    const result = await signIn({ email, password })
+    await api.post("/forgotPassword", { email });
 
-    if (!result.success) {
-      return alert(`❌ ${result.message}`)
-    }
-
+    alert("Acesse seu email para recuperar a senha.");
     navigate("/");
   }
 
@@ -42,7 +37,7 @@ export function SignIn() {
 
       <Container>
         <Context>
-          <Title>Faça o seu login</Title>
+          <Title>Recuperar Senha</Title>
           <Form onSubmit={handleSignIn}>
             <Input
               name="email"
@@ -51,17 +46,7 @@ export function SignIn() {
               type="email"
               onChange={(e) => setEmail(e.target.value)}
             />
-            <Input
-              name="password"
-              label="Senha"
-              placeholder="Senha"
-              type="password"
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <BackLinkWrapper>
-              <Link to="/forgotPassword">Esqueceu a senha?</Link>
-            </BackLinkWrapper>
-            <Button type="submit" title="Entrar"/>
+            <Button type="submit" title="Enviar"/> 
             <BackLinkWrapper style={{ textAlign: "center", marginTop: "1rem"}}>
               <Link to="/">Voltar</Link>
             </BackLinkWrapper>
