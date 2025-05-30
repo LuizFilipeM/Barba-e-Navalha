@@ -52,10 +52,10 @@ export function Profile() {
             cidade: formData.cidade,
             data_nascimento: formData.data_nascimento,
             oldPassword: formData.oldPassword,
-            newPassword: formData.newPassword || undefined,
+            newPassword: formData.newPassword || null,
         });
-
-        if (response.data.success) {
+        console.log(response.data)
+        if (response.data.status === 'success') {
             alert("Dados atualizados com sucesso!");
 
             const updatedUser = {
@@ -88,7 +88,7 @@ export function Profile() {
 
         if (confirmDelete) {
             const response = await api.delete(`/api/users/${user.id}`);
-            if (response.data.success) {
+            if (response.data.staus === 'success') {
                 alert("Conta excluída com sucesso.");
                 signOut();
             } else {

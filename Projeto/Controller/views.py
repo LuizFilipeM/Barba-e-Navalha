@@ -9,33 +9,22 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-# Vale a pena transformar a função processar_requisicao em varias funções?
 
 def processar_requisicao(request):
-    if (
-        request.method == "POST"
-        and request.headers.get("Content-Type") == "application/json"
-    ):
-        try:
-            data = json.loads(request.body)
-            return data
-        except json.JSONDecodeError:
-            return JsonResponse(
-                {"success": False, "message": "Json inválido"}, status=400
-            )
+    
+    try:
+        data = json.loads(request.body)
+        return data
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {"success": False, "message": "Json inválido"}, status=400
+        )
 
 @csrf_exempt
 def login_view(request):
     data = processar_requisicao(request)
-    if not data:
-        return JsonResponse(
-            {
-                "success": False,
-                "message": "Dados não fornecidos",
-            }
-        )
 
-    success, msg, user_id, tipo, name = login(data)
+    success, msg, user_id, tipo, name, email, cpf, telefone, data_nascimento, cidade = login(data)
 
     if success:
         # Armazenando na sessão
@@ -48,6 +37,13 @@ def login_view(request):
             "success": success,
             "message": msg,
             "tipo": tipo,
+            "name": name,
+            "email": email,
+            "cpf": cpf,
+            "telefone": telefone,
+            "data_nascimento": data_nascimento,
+            "cidade": cidade,
+            "id": user_id,
         }
     )
 
@@ -82,3 +78,13 @@ def atualizar_agendamento_view(request):
 def listar_agendamentos_view(request):
     data = processar_requisicao(request)
     return lista_agendamentos(data)
+
+@csrf_exempt
+def editar_perfil_view(request,id):
+    data = processar_requisicao(request)
+
+    if request.method == "DELETE":
+        return deletar_perfil(id)
+    
+    elif request.method == "PUT":
+        return editar_perfil(data, id)
