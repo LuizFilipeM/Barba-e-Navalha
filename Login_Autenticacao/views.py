@@ -43,7 +43,7 @@ def login_view(request):
           
 def login(data):
     email = data.get('email')
-    senha = data.get('senha')
+    senha = data.get('password')
 
     try:
         usuario = Usuario.objects.get(email=email)
@@ -361,29 +361,31 @@ def recuperar_dados_perfil(usuario_id):
         }
 
 def editar_perfil(data):
+    senha = data.get('password')
     try:
         usuario = Usuario.objects.get(id=data['usuario_id'])
+        if check_password(senha, usuario.senha):
 
-        if usuario.tipo == 'Cliente':
-            perfil = Cliente.objects.get(id=usuario)
-        elif usuario.tipo == 'Barbeiro':
-            perfil = Barbeiro.objects.get(id=usuario)
-        else:
-            return JsonResponse ({'status': 'error', 'msg': 'Tipo de usuário inválido'})
+            if usuario.tipo == 'Cliente':
+                perfil = Cliente.objects.get(id=usuario)
+            elif usuario.tipo == 'Barbeiro':
+                perfil = Barbeiro.objects.get(id=usuario)
+            else:
+                return JsonResponse ({'status': 'error', 'msg': 'Tipo de usuário inválido'})
 
-        # Atualiza o usuário
-        usuario.email = data['email']
-        if data['password']:
-            usuario.senha = make_password(data['password'])
-        usuario.save()
+            # Atualiza o usuário
+            usuario.email = data['email']
+            if data['password']:
+                usuario.senha = make_password(data['password'])
+            usuario.save()
 
-        # Atualiza o perfil
-        perfil.nome = data['name']
-        perfil.telefone = data['telefone']
-        perfil.cidade = data['cidade']
-        perfil.save()
+            # Atualiza o perfil
+            perfil.nome = data['name']
+            perfil.telefone = data['telefone']
+            perfil.cidade = data['cidade']
+            perfil.save()
 
-        return JsonResponse ({'status': 'success'})
+            return JsonResponse ({'status': 'success'})
 
     except Usuario.DoesNotExist:
         return JsonResponse ({'status': 'error', 'message': 'Usuário não encontrado'})
