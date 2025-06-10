@@ -13,8 +13,34 @@ from django.core.cache import cache
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib import messages
+import random
+import string
 import uuid
 
+def login_view(request):
+    if request.method == 'POST' and request.headers.get('Content-Type') == 'application/json':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Json inválido'}, status=400)
+        
+        success, msg, user_id, tipo, nome = login(data)
+
+        if success:
+            # Armazenando na sessão
+            request.session['usuario_id'] = user_id
+            request.session['usuario_tipo'] = tipo
+            request.session['usuario_nome'] = nome
+
+        return JsonResponse({
+            'success': success,
+            'message': msg,
+            'redirect_url': '/home' if success else ''
+        })
+
+    # Caso seja GET, apenas renderiza o formulário normalmente
+    return render(request, 'Projeto/login.html')
+          
 def login(data):
     email = data.get('email')
     senha = data.get('senha')
@@ -36,9 +62,23 @@ def login(data):
     except Usuario.DoesNotExist:
         return False, "Usuario não encontrado", None, None, None
 
+def cadastro_view(request):
+    if request.method == 'POST' and request.headers.get('Content-Type') == 'application/json':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'JSON inválido'}, status=400)
+
+        success, msg = cadastro(data)
+
+        return JsonResponse({'success': success, 'message': msg})
+
+    # Caso seja GET, apenas renderiza o formulário normalmente
+    return render(request, 'Projeto/cadastro.html')
+
 def cadastro(data):
-    nome = data.get('nome')
-    senha = data.get('senha')
+    nome = data.get('name')
+    senha = data.get('password')
     tipo = data.get('tipo')
     telefone = data.get('telefone')
     data_nascimento = data.get('data_nascimento')
@@ -48,7 +88,7 @@ def cadastro(data):
 
     # Verifica se login já existe
     if Usuario.objects.filter(email=email).exists():
-        return False, "Email já cadastrado"
+        return JsonResponse ({"status":False, "msg":"Email já cadastrado"})
 
     # Criação do usuário (com senha criptografada)
     usuario = Usuario(
@@ -84,9 +124,214 @@ def cadastro(data):
         barbeiro.save()
 
     # Se o cadastro foi bem-sucedido, exibe a mensagem de sucesso e redireciona
-    return True, "Cadastro realizado com sucesso!"
+    return JsonResponse({"status":True, "msg":"Cadastro realizado com sucesso!"})
 
-## Criei essa função, que será chamada pelo controlador para recuperar os dados do usuario na hora de editar.
+def pos_login(request):
+    # Verifica se o usuário está autenticado e se o usuario_id existe na sessão
+    if request.user.is_authenticated:
+        usuario_id = request.session.get('usuario_id')
+
+        if usuario_id:
+            try:
+                usuario = Usuario.objects.get(id=usuario_id)
+                request.session['usuario_id'] = usuario.id
+                request.session['usuario_tipo'] = usuario.tipo
+                request.session['usuario_nome'] = request.user.first_name + " " + request.user.last_name
+
+                # Se o tipo do usuário já está definido, redireciona para a home
+                if usuario.tipo:
+                    return redirect('home')
+                else:
+                    return redirect('cadastro_google')
+
+            except Usuario.DoesNotExist:
+                print("Usuario não encontrado")
+                return redirect('login')
+        else:
+            return redirect('login')
+    else:
+        return redirect('login')
+      
+def cadastro_google_view(request):
+    # Verifica se o usuário já está autenticado
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')  # Se não tiver usuario_id, redireciona para login
+
+    usuario = Usuario.objects.get(id=usuario_id)
+
+    # Se o usuário já tiver um tipo (Cliente ou Barbeiro), redireciona para home
+    if usuario.tipo:
+        return redirect('home')
+
+    nome_google = request.user.first_name + " " + request.user.last_name
+
+    if request.method == 'POST' and request.headers.get('Content-Type') == 'application/json':
+        try:
+            data = json.loads(request.body)
+            data['usuario_id'] = usuario_id
+            data['nome_google'] = nome_google
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'JSON inválido'}, status=400)
+
+        success, msg = cadastro_google(data)
+
+        return JsonResponse({
+            'success': success,
+            'message': msg,
+            'redirect_url': '/home' if success else ''
+        })
+
+    # Caso seja GET, apenas renderiza o formulário normalmente    
+    return render(request, 'Projeto/cadastro_google.html')
+
+def cadastro_google(data):
+    tipo = data.get('tipo')
+    usuario_id = data.get('usuario_id')
+    nome = data.get('nome_google')
+    telefone = data.get('telefone')
+    data_nascimento = data.get('data_nascimento')
+    cidade = data.get('cidade')
+    cpf = data.get('cpf')
+    
+    usuario = Usuario.objects.get(id=usuario_id)
+    usuario.tipo = tipo
+    usuario.save()
+
+    # Cria o perfil correspondente
+    if tipo == 'Cliente':
+        cliente = Cliente(
+            nome=nome,
+            id=usuario,
+            cpf=cpf,
+            telefone=telefone,
+            data_nascimento=data_nascimento,
+            cidade=cidade
+        )
+        cliente.save()
+
+        return JsonResponse ({"status":True, "msg":"Cadastro realizado com sucesso!"})
+
+    elif tipo == 'Barbeiro':
+        barbeiro = Barbeiro(
+            id=usuario,
+            nome=nome,
+            cpf=cpf,
+            telefone=telefone,
+            data_nascimento=data_nascimento,
+            cidade=cidade
+        )
+        barbeiro.save()
+
+        return JsonResponse ({"status":True, "msg":"Cadastro realizado com sucesso!"})
+
+    return JsonResponse ({"status":False, "msg":"Erro no cadastro!"})
+
+def recuperar_senha_view(request):
+    if request.method == 'POST' and request.headers.get('Content-Type') == 'application/json':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Json inválido'}, status=400)
+        
+        success, msg = recuperar_senha(data)
+
+        if success:
+            return JsonResponse({'success': success, 'message': msg})
+
+    # Caso seja GET, apenas renderiza o formulário normalmente
+    return render(request, 'Projeto/recuperar_senha.html')
+
+def gerar_senha_temporaria(tamanho=8):
+    caracteres = string.ascii_letters + string.digits
+    return ''.join(random.choices(caracteres, k=tamanho))
+
+def recuperar_senha(request):   
+    if request.method == 'POST':
+        email = request.POST.get('email')
+
+        try:
+            usuario = Usuario.objects.get(email=email)
+        except Usuario.DoesNotExist:
+            messages.error(request, 'E-mail não encontrado.')
+            return redirect('recuperar_senha')
+
+        nova_senha = gerar_senha_temporaria()
+        usuario.senha = make_password(nova_senha)
+        usuario.save()
+
+        if usuario.tipo == "Cliente":
+            cliente = Cliente.objects.get(id=usuario.id)
+            nome = cliente.nome
+        elif usuario.tipo == "Barbeiro":
+            barbeiro = Barbeiro.objects.get(id=usuario.id)
+            nome = barbeiro.nome
+        else:
+            messages.error(request, 'Tipo de usuário inválido.')
+            return redirect('recuperar_senha')
+
+        subject = 'Nova Senha Temporária'
+        message = render_to_string('emails/reset_email.html', {
+            'nome': nome,
+            'nova_senha': nova_senha,
+        })
+        send_mail(subject, message, None, [usuario.email])
+
+        messages.success(request, 'Uma nova senha foi enviada para seu e-mail.')
+        return redirect('login')
+
+    return render(request, 'projeto/recuperar_senha.html')
+
+def home_view(request):
+    # Recupera os dados da sessão
+    usuario_id = request.session['usuario_id']
+    tipo = request.session.get('usuario_tipo')
+    nome = request.session.get('usuario_nome')
+
+    if not nome or not tipo:
+        # Usuário não está logado, redireciona para login
+        return redirect('login')
+
+    # Defina ações diferentes dependendo do tipo de usuário
+    if tipo == 'Cliente':
+        
+        acoes = ['Editar Perfil', 'Apagar Perfil', 'Inserir Agendamento', 'Ver Agendamentos']
+    elif tipo == 'Barbeiro':
+        acoes = ['Editar Perfil', 'Apagar Perfil', 'Cadastrar Local', 'Cadastrar Serviços',
+                  'Cadastrar Horarios', 'Editar Local', 'Apagar Local', 'Gerenciar Agenda']
+    else:
+        acoes = []
+
+    return render(request, 'Projeto/home.html', {
+        'nome': nome,
+        'tipo': tipo,
+        'acoes': acoes,
+    })
+
+def editar_perfil_view(request):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+
+    usuario_id = request.session['usuario_id']
+
+    if request.method == 'POST' and request.headers.get('Content-Type') == 'application/json':
+        data = json.loads(request.body)
+        data['usuario_id'] = usuario_id
+
+        resultado = editar_perfil(data)
+        return JsonResponse({'success': resultado['status'] == 'success', 'message': resultado.get('message', '')})
+
+    # Se for GET, busca os dados com a função auxiliar
+    resultado = recuperar_dados_perfil(usuario_id)
+
+    if resultado['status'] == 'success':
+        return render(request, 'Projeto/usuario_editar_perfil.html', {
+            'usuario': resultado['usuario'],
+            'perfil': resultado['perfil']
+        })
+    else:
+        return redirect('login')
+    
 def recuperar_dados_perfil(usuario_id):
     try:
         usuario = Usuario.objects.get(id=usuario_id)
@@ -124,26 +369,46 @@ def editar_perfil(data):
         elif usuario.tipo == 'Barbeiro':
             perfil = Barbeiro.objects.get(id=usuario)
         else:
-            return {'status': 'error', 'message': 'Tipo de usuário inválido'}
+            return JsonResponse ({'status': 'error', 'msg': 'Tipo de usuário inválido'})
 
         # Atualiza o usuário
         usuario.email = data['email']
-        if data['senha']:
-            usuario.senha = make_password(data['senha'])
+        if data['password']:
+            usuario.senha = make_password(data['password'])
         usuario.save()
 
         # Atualiza o perfil
-        perfil.nome = data['nome']
+        perfil.nome = data['name']
         perfil.telefone = data['telefone']
         perfil.cidade = data['cidade']
         perfil.save()
 
-        return {'status': 'success'}
+        return JsonResponse ({'status': 'success'})
 
     except Usuario.DoesNotExist:
-        return {'status': 'error', 'message': 'Usuário não encontrado'}
+        return JsonResponse ({'status': 'error', 'message': 'Usuário não encontrado'})
     except Exception as e:
-        return {'status': 'error', 'message': str(e)}
+        return JsonResponse ({'status': 'error', 'message': str(e)})
+
+def deletar_perfil_view(request):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+
+    usuario_id = request.session['usuario_id']
+
+    if request.method == 'POST':
+        data = {'usuario_id': usuario_id}
+        resultado = deletar_perfil(data)
+
+        # Logout e redireciona
+        request.session.flush()
+
+        if resultado['status'] == 'success':
+            return redirect('login')
+        else:
+            return render(request, 'Projeto/usuario_deletar_perfil.html', {'error': resultado['message']})
+
+    return render(request, 'Projeto/usuario_deletar_perfil.html')
 
 def deletar_perfil(data):
     usuario_id = data.get('usuario_id')
@@ -168,29 +433,70 @@ def deletar_perfil(data):
 
         usuario.delete()
 
-        return {'status': 'success'}
+        return JsonResponse ({'status': 'success'})
 
     except Usuario.DoesNotExist:
-        return {'status': 'error', 'message': 'Usuário não encontrado'}
+        return JsonResponse ({'status': 'error', 'message': 'Usuário não encontrado'})
     except Exception as e:
-        return {'status': 'error', 'message': str(e)}
+        return JsonResponse ({'status': 'error', 'message': str(e)})
 
-## Função, chamada pelo controlador, que vai verificar se ja existe local quando o barbeiro clicar em cadastrar local
+def cadastrar_local_view(request):
+    # Recupera o id do usuário logado
+    if 'usuario_id' not in request.session:
+        return redirect('login')  # Redireciona caso o usuário não esteja logado
+
+    usuario_id = request.session['usuario_id']
+    data = {}
+    data['usuario_id'] = usuario_id 
+
+    # Se for POST com conteúdo JSON
+    if request.method == 'POST' and request.headers.get('Content-Type') == 'application/json':
+        try:
+            # Carrega os dados JSON
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'JSON inválido'}, status=400)
+        
+        # Adiciona o usuario_id ao JSON data
+        data['usuario_id'] = usuario_id
+
+        # Passa o dicionário data para a função de cadastro
+        success, msg = cadastrar_local(data)
+
+        # Retorna a resposta com sucesso ou erro
+        print("Resultado do cadastro:", success, msg)
+        return JsonResponse({
+            'success': success,
+            'message': msg,
+            'redirect_url': '/home' if success else ''
+        })
+
+    # Se for GET, renderiza o formulário
+    if request.method == 'GET':
+        tem_local, msg =verifica_local(usuario_id)
+        if tem_local:
+            return JsonResponse({
+                'message': msg,
+                'redirect_url': '/home'
+            })
+
+        return render(request, 'Projeto/cadastro_local.html')
+
 def verifica_local(usuario_id):
     try:
         barbeiro = Barbeiro.objects.get(id=usuario_id)
         if Local.objects.filter(barbeirousuarioid=barbeiro).exists():
-            return True, "Você já possui um local cadastrado."
+            return JsonResponse ({"status":True, "msg":"Você já possui um local cadastrado."})
         return False, ""
     except Barbeiro.DoesNotExist:
-        return False, "Usuário (barbeiro) não encontrado."
+        return JsonResponse ({"status":False, "msg":"Usuário (barbeiro) não encontrado."})
 
 def cadastrar_local(data):
-    nome_local = data.get('nome_local')
+    nome_local = data.get('nomeLocal')
     rua = data.get('rua', '').strip()
     bairro = data.get('bairro', '').strip()
     numero = data.get('numero', '').strip()
-    cidade = data.get('cidade', '').strip()
+    cidade = data.get('cidadeLocal', '').strip()
     endereco = f"{rua},{bairro},{numero},{cidade}"
     cnpj = data.get('cnpj')
     telefone = data.get('telefone')
@@ -198,7 +504,7 @@ def cadastrar_local(data):
     try:
         barbeiro = Barbeiro.objects.get(id=data.get('usuario_id'))  # Assumindo que 'usuario_id' é o ID do Barbeiro
     except Barbeiro.DoesNotExist:
-        return False, "Usuário (barbeiro) não encontrado"
+        return JsonResponse ({"status": False, "msg": "Usuário (barbeiro) não encontrado"})
     
     # Criando Local
     local = Local(
@@ -210,9 +516,36 @@ def cadastrar_local(data):
     )
     local.save()
 
-    return True, "Cadastro realizado com sucesso!"
+    return JsonResponse ({"status": True, "msg": "Cadastro realizado com sucesso!"})
 
-## Função que recupera os dados do local, chamada pelo controlador, na hora de editar dados
+def editar_local_view(request): 
+    print("Método recebido:", request.method)
+    print("Headers:", request.headers)
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+
+    usuario_id = request.session['usuario_id']
+
+    if request.method == 'POST' and 'application/json' in request.headers.get('Content-Type', ''):
+        print("Recebendo dados:", request.body)
+        data = json.loads(request.body)
+        data['usuario_id'] = usuario_id
+
+        print("chamando a func")
+        resultado = editar_local(data)
+        return JsonResponse({'success': resultado['status'] == 'success', 'message': resultado.get('message', '')})
+
+    # Se for GET, busca os dados com a função auxiliar
+    resultado = recuperar_dados_local(usuario_id)
+
+    if resultado['status'] == 'success':
+        return render(request, 'Projeto/editar_local.html', {
+            'usuario': resultado['usuario'],
+            'local': resultado['local']
+        })
+    else:
+        return redirect('home')
+
 def recuperar_dados_local(usuario_id):
     try:
         usuario = Usuario.objects.get(id=usuario_id)
@@ -241,7 +574,6 @@ def recuperar_dados_local(usuario_id):
         }
 
 def editar_local(data):
-    print("Entrou")
     try:
         print("Buscando usuário...")
         usuario = Usuario.objects.get(id=data['usuario_id'])
@@ -256,23 +588,43 @@ def editar_local(data):
         rua = data.get('rua', '').strip()
         bairro = data.get('bairro', '').strip()
         numero = data.get('numero', '').strip()
-        cidade = data.get('cidade', '').strip()
+        cidade = data.get('cidadeLocal', '').strip()
         endereco = f"{rua},{bairro},{numero},{cidade}"
 
-        local.nome_local = data['nome']
+        local.nome_local = data['nomeLocal']
         local.endereco = endereco
         local.telefone = data['telefone']
         local.save()
 
         print("Dados salvos com sucesso.")
-        return {'status': 'success'}
+        return JsonResponse ({'status': 'success'})
 
     except Usuario.DoesNotExist:
         print("Usuário não encontrado.")
-        return {'status': 'error', 'message': 'Usuário não encontrado'}
+        return JsonResponse ({'status': 'error', 'message': 'Usuário não encontrado'})
     except Exception as e:
         print("Erro ao editar local:", e)
-        return {'status': 'error', 'message': str(e)}
+        return JsonResponse ({'status': 'error', 'message': str(e)})
+
+def apagar_local_view(request):
+    print("apagar_local_view")
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+
+    usuario_id = request.session['usuario_id']
+
+    if request.method == 'POST':
+        data = {'usuario_id': usuario_id}
+        print("chamando a função apagar_local")
+        resultado = apagar_local(data)
+
+        if resultado['status'] == 'success':
+            print("sucesso")
+            return redirect('home')
+        else:
+            return render(request, 'Projeto/apagar_local.html', {'error': resultado['message']})
+
+    return render(request, 'Projeto/apagar_local.html')
 
 def apagar_local(data):
     usuario_id = data.get('usuario_id')
@@ -290,29 +642,63 @@ def apagar_local(data):
             Horarios.objects.filter(idlocal=local).delete()
             local.delete()
 
-        return {'status': 'success'}
+        return JsonResponse ({'status': 'success'})
 
     except Local.DoesNotExist:
-        return {'status': 'error', 'message': 'Local não encontrado'}
+        return JsonResponse ({'status': 'error', 'message': 'Local não encontrado'})
 
     except Barbeiro.DoesNotExist:
-        return {'status': 'error', 'message': 'Barbeiro não encontrado'}
+        return JsonResponse ({'status': 'error', 'message': 'Barbeiro não encontrado'})
 
     except Exception as e:
-        return {'status': 'error', 'message': str(e)}
+        return JsonResponse ({'status': 'error', 'message': str(e)})
     
+def cadastrar_servico_view(request):
+    # Recupera o id do usuário logado
+    if 'usuario_id' not in request.session:
+        return redirect('login')  # Redireciona caso o usuário não esteja logado
+
+    usuario_id = request.session['usuario_id']
+    data = {}
+    data['usuario_id'] = usuario_id 
+
+    # Se for POST com conteúdo JSON
+    if request.method == 'POST' and request.headers.get('Content-Type') == 'application/json':
+        try:
+            # Carrega os dados JSON
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'JSON inválido'}, status=400)
+        
+        # Adiciona o usuario_id ao JSON data
+        data['usuario_id'] = usuario_id
+
+        # Passa o dicionário data para a função de cadastro
+        success, msg = cadastrar_servico(data)
+
+        # Retorna a resposta com sucesso ou erro
+        print("Resultado do cadastro:", success, msg)
+        return JsonResponse({
+            'success': success,
+            'message': msg,
+            'redirect_url': '/home' if success else ''
+        })
+
+    # Se for GET, renderiza o formulário
+    return render(request, 'Projeto/cadastro_servicos.html')
+
 def cadastrar_servico(data):
     try:
         barbeiro = Barbeiro.objects.get(id=data.get('usuario_id'))  # Assumindo que 'usuario_id' é o ID do Barbeiro
         local = Local.objects.get(barbeirousuarioid=barbeiro)
     except Barbeiro.DoesNotExist:
-        return False, "Usuário (barbeiro) não encontrado"
+        return JsonResponse ({"status": False, "msg": "Usuário (barbeiro) não encontrado"})
     
     # Dados Serviço
-    nome_servico_list = data.get('nome_servico', [])
+    nome_servico_list = data.get('nomeServico', [])
     descricao_servico_list = data.get('descricao', [])
     preco_list = data.get('preco', [])
-    tempo_list = data.get('tempo_servico', [])
+    tempo_list = data.get('duracao', [])
 
     print("Serviços recebidos:")
     print("Nome:", nome_servico_list)
@@ -332,14 +718,48 @@ def cadastrar_servico(data):
         )
         servico.save()
 
-    return True, "Cadastro realizado com sucesso!"
+    return JsonResponse ({"status": True, "msg": "Cadastro realizado com sucesso!"})
+
+def cadastrar_horario_view(request):
+    # Recupera o id do usuário logado
+    if 'usuario_id' not in request.session:
+        return redirect('login')  # Redireciona caso o usuário não esteja logado
+
+    usuario_id = request.session['usuario_id']
+    data = {}
+    data['usuario_id'] = usuario_id 
+
+    # Se for POST com conteúdo JSON
+    if request.method == 'POST' and request.headers.get('Content-Type') == 'application/json':
+        try:
+            # Carrega os dados JSON
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'JSON inválido'}, status=400)
+        
+        # Adiciona o usuario_id ao JSON data
+        data['usuario_id'] = usuario_id
+
+        # Passa o dicionário data para a função de cadastro
+        success, msg = cadastrar_horario(data)
+
+        # Retorna a resposta com sucesso ou erro
+        print("Resultado do cadastro:", success, msg)
+        return JsonResponse({
+            'success': success,
+            'message': msg,
+            'redirect_url': '/home' if success else ''
+        })
+
+    # Se for GET, renderiza o formulário
+    return render(request, 'Projeto/cadastro_horarios.html')
 
 def cadastrar_horario(data):
     try:
         barbeiro = Barbeiro.objects.get(id=data.get('usuario_id'))  # Assumindo que 'usuario_id' é o ID do Barbeiro
         local = Local.objects.get(barbeirousuarioid=barbeiro)
     except Barbeiro.DoesNotExist:
-        return False, "Usuário (barbeiro) não encontrado"
+        return JsonResponse ({"status": False, "msg": "Usuário (barbeiro) não encontrado"})
     
     # Dados Horarios
     dias_semana = data.get('dias', [])
@@ -354,7 +774,7 @@ def cadastrar_horario(data):
             try:
                 horario_formatado = datetime.strptime(horario.strip(), '%H:%M').time()
             except ValueError:
-                return False, f"Horário inválido: {horario}. Use o formato HH:MM."
+                return JsonResponse ({"status": False, "msg": f"Horário inválido: {horario}. Use o formato HH:MM."})
 
             horario_obj = Horarios(
                 dia_semana=dia,
@@ -363,7 +783,7 @@ def cadastrar_horario(data):
             )
             horario_obj.save()
 
-    return True, "Cadastro realizado com sucesso!"
+    return JsonResponse ({"status": True, "msg": "Cadastro realizado com sucesso!"})
 
 def logout_view(request):
     request.session.flush()  # Limpa todos os dados da sessão
