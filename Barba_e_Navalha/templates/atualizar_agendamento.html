@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste de Funções</title>
+</head>
+<body>
+<h2>Atualizar Agendamento</h2>
+
+<form method="POST">
+    {% csrf_token %}
+    <label>ID do Cliente:</label>
+    <input type="number" name="cliente_id">
+    <button type="submit">Buscar Agendamentos</button>
+</form>
+
+{% if agendamentos %}
+    <h3>Agendamentos do Cliente</h3>
+    <table border="1">
+        <tr>
+            <th>ID</th><th>Data</th><th>Hora</th><th>Serviço</th>
+        </tr>
+        {% for ag in agendamentos %}
+        <tr>
+            <td>{{ ag.id }}</td>
+            <td>{{ ag.data }}</td>
+            <td>{{ ag.hora }}</td>
+            <td>{{ ag.idservicos_id }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h3>Atualizar Agendamento</h3>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="cliente_id" value="{{ cliente_id }}">
+        <label>ID do Agendamento:</label>
+        <input type="number" name="agendamento_id"><br>
+        <label>Nova Data:</label>
+        <input type="date" name="data"><br>
+        <label>Novo Horário:</label>
+        <input type="time" name="hora"><br>
+        <label>Novo Serviço (ID):</label>
+        <input type="number" name="servico"><br>
+        <button type="submit">Atualizar</button>
+    </form>
+{% endif %}
+</body>
+</html>
