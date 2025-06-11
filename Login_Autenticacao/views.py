@@ -361,7 +361,7 @@ def recuperar_dados_perfil(usuario_id):
         }
 
 def editar_perfil(data, id):
-    senha = data.get('password')
+    senha = data.get('oldPassword')
     try:
         usuario = Usuario.objects.get(id=data['usuario_id'])
         if check_password(senha, usuario.senha):
@@ -375,7 +375,7 @@ def editar_perfil(data, id):
 
             # Atualiza o usuário
             usuario.email = data['email']
-            if data['password']:
+            if data['newPassword']:
                 usuario.senha = make_password(data['password'])
             usuario.save()
 
