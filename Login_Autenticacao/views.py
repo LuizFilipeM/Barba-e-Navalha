@@ -52,15 +52,15 @@ def login(data):
             tipo = usuario.tipo  # Cliente ou Barbeiro
             # Buscar o nome do usuário a partir do tipo
             if tipo == 'Cliente':
-                nome = Cliente.objects.get(id=usuario.id).nome
+                cli = Cliente.objects.get(id=usuario.id)
             elif tipo == 'Barbeiro':
-                nome = Barbeiro.objects.get(id=usuario.id).nome
+                cli = Barbeiro.objects.get(id=usuario.id)
 
-            return True, "Login realizado com sucesso!", usuario.id, tipo, nome
+            return True, "Login realizado com sucesso!", usuario.id, tipo, cli.nome, usuario.email, cli.cpf, cli.telefone, cli.data_nascimento, cli.cidade
         
-        return False, "Senha incorreta", None, None, None
+        return False, "Senha incorreta", None, None, None, None, None, None, None, None
     except Usuario.DoesNotExist:
-        return False, "Usuario não encontrado", None, None, None
+        return False, "Usuario não encontrado", None, None, None, None, None, None, None, None
 
 def cadastro_view(request):
     if request.method == 'POST' and request.headers.get('Content-Type') == 'application/json':
