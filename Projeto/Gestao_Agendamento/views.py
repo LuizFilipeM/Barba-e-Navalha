@@ -3,10 +3,12 @@
 import json
 from django.shortcuts import render
 from django.http import JsonResponse
-from .models import Cliente, Agenda, Servicos
+
 from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
+
+from Projeto.Login_Autenticacao.models import *
 
 
 

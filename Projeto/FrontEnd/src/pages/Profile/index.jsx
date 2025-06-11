@@ -54,7 +54,6 @@ export function Profile() {
             oldPassword: formData.oldPassword,
             newPassword: formData.newPassword || null,
         });
-        console.log(response.data)
         if (response.data.status === 'success') {
             alert("Dados atualizados com sucesso!");
 
@@ -88,7 +87,7 @@ export function Profile() {
 
         if (confirmDelete) {
             const response = await api.delete(`/api/users/${user.id}`);
-            if (response.data.staus === 'success') {
+            if (response.data.status === 'success') {
                 alert("Conta excluída com sucesso.");
                 signOut();
             } else {

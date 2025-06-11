@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from Projeto.Gestao_Agendamento.models import *
 from .models import *
 from django.contrib.auth.hashers import check_password 
 from django.contrib.auth.hashers import make_password
@@ -33,6 +34,7 @@ def login(data):
             elif tipo == "Barbeiro":
                 cliente = Barbeiro.objects.get(id=usuario.id)
         # tipo, name, email, cpf, telefone, data_nascimento, cidade
+            print(cliente.nome)
             return True, "Login realizado com sucesso!", usuario.id, tipo, cliente.nome, email, cliente.cpf, cliente.telefone, cliente.data_nascimento, cliente.cidade
 
         return False, "Senha incorreta", None, None, None, None, None, None, None, None
@@ -184,25 +186,26 @@ def verifica_local(usuario_id):
     try:
         barbeiro = Barbeiro.objects.get(id=usuario_id)
         if Local.objects.filter(barbeirousuarioid=barbeiro).exists():
-            return True, "Você já possui um local cadastrado."
-        return False, ""
+            return JsonResponse({"status":False,"msg": "Você já possui um local cadastrado."})
+        return True, ""
     except Barbeiro.DoesNotExist:
-        return False, "Usuário (barbeiro) não encontrado."
+        return JsonResponse({"status":False,"msg": "Usuário (barbeiro) não encontrado."})
 
-def cadastrar_local(data):
-    nome_local = data.get('nome_local')
+#deletar servicos ao deletar barbearia
+def cadastrar_local(data, id):
+    nome_local = data.get('nomeLocal')
     rua = data.get('rua', '').strip()
     bairro = data.get('bairro', '').strip()
     numero = data.get('numero', '').strip()
-    cidade = data.get('cidade', '').strip()
+    cidade = data.get('cidadeLocal', '').strip()
     endereco = f"{rua},{bairro},{numero},{cidade}"
     cnpj = data.get('cnpj')
     telefone = data.get('telefone')
     
     try:
-        barbeiro = Barbeiro.objects.get(id=data.get('usuario_id'))  # Assumindo que 'usuario_id' é o ID do Barbeiro
+        barbeiro = Barbeiro.objects.get(id=id)  # Assumindo que id é o ID do Barbeiro
     except Barbeiro.DoesNotExist:
-        return False, "Usuário (barbeiro) não encontrado"
+        return JsonResponse ({"status": False,"msg": "Usuário (barbeiro) não encontrado"})
     
     # Criando Local
     local = Local(
@@ -213,8 +216,7 @@ def cadastrar_local(data):
         barbeirousuarioid=barbeiro
     )
     local.save()
-
-    return True, "Cadastro realizado com sucesso!"
+    return JsonResponse ({"status": True,"msg": "Cadastro realizado com sucesso!"})
 
 ## Função que recupera os dados do local, chamada pelo controlador, na hora de editar dados
 def recuperar_dados_local(usuario_id):
@@ -244,6 +246,7 @@ def recuperar_dados_local(usuario_id):
             'message': str(e)
         }
 
+#TODO verificar campos faltantes
 def editar_local(data):
     print("Entrou")
     try:
@@ -278,8 +281,8 @@ def editar_local(data):
         print("Erro ao editar local:", e)
         return {'status': 'error', 'message': str(e)}
 
-def apagar_local(data):
-    usuario_id = data.get('usuario_id')
+#TODO criar URL
+def apagar_local(usuario_id):
 
     try:
         barbeiro = Barbeiro.objects.get(id=usuario_id)
@@ -294,81 +297,64 @@ def apagar_local(data):
             Horarios.objects.filter(idlocal=local).delete()
             local.delete()
 
-        return {'status': 'success'}
+        return JsonResponse({'status': 'success'})
 
     except Local.DoesNotExist:
-        return {'status': 'error', 'message': 'Local não encontrado'}
+        return JsonResponse({'status': 'error', 'message': 'Local não encontrado'})
 
     except Barbeiro.DoesNotExist:
-        return {'status': 'error', 'message': 'Barbeiro não encontrado'}
+        return JsonResponse({'status': 'error', 'message': 'Barbeiro não encontrado'})
 
     except Exception as e:
-        return {'status': 'error', 'message': str(e)}
+        return JsonResponse({'status': 'error', 'message': str(e)})
     
-def cadastrar_servico(data):
+def cadastrar_servico(data,id):
     try:
-        barbeiro = Barbeiro.objects.get(id=data.get('usuario_id'))  # Assumindo que 'usuario_id' é o ID do Barbeiro
+        barbeiro = Barbeiro.objects.get(id=id)
         local = Local.objects.get(barbeirousuarioid=barbeiro)
     except Barbeiro.DoesNotExist:
-        return False, "Usuário (barbeiro) não encontrado"
+        return JsonResponse({"status": False,"msg":  "Usuário (barbeiro) não encontrado"})
     
     # Dados Serviço
-    nome_servico_list = data.get('nome_servico', [])
-    descricao_servico_list = data.get('descricao', [])
-    preco_list = data.get('preco', [])
-    tempo_list = data.get('tempo_servico', [])
-
-    print("Serviços recebidos:")
-    print("Nome:", nome_servico_list)
-    print("Descrição:", descricao_servico_list)
-    print("Preço:", preco_list)
-    print("Tempo:", tempo_list)
+    nome_servico = data.get('nomeServico')
+    descricao_servico = data.get('descricao')
+    preco = data.get('preco')
+    tempo = data.get('duracao')
 
     # Criando os serviços
-    for nome_servico, descricao_servico, preco, tempo in zip(nome_servico_list, descricao_servico_list, preco_list, tempo_list):
-        print(f"Salvando serviço: {nome_servico}, {descricao_servico}, {preco}, {tempo}")
-        servico = Servicos(
-            nome=nome_servico,
-            descricao=descricao_servico,
-            preco=preco,
-            idlocal=local,  # Relaciona o local
-            tempo=tempo
-        )
-        servico.save()
+    # TODO verificar campos faltantes no BD e por que esta cadastrando 2 servicos sempre
+    
+    servico = Servicos(
+        nome=nome_servico,
+        descricao=descricao_servico,
+        preco=preco,
+        idlocal=local,  # Relaciona o local
+        tempo=tempo
+    )
+    servico.save()
+    return JsonResponse({"status": True,"msg":  "Cadastro realizado com sucesso!"})
 
-    return True, "Cadastro realizado com sucesso!"
-
-def cadastrar_horario(data):
+def cadastrar_horario(data,id):
     try:
-        barbeiro = Barbeiro.objects.get(id=data.get('usuario_id'))  # Assumindo que 'usuario_id' é o ID do Barbeiro
+        barbeiro = Barbeiro.objects.get(id=id)  # Assumindo que 'usuario_id' é o ID do Barbeiro
         local = Local.objects.get(barbeirousuarioid=barbeiro)
     except Barbeiro.DoesNotExist:
-        return False, "Usuário (barbeiro) não encontrado"
-    
+        return JsonResponse({'status':False,'msg': "Usuário (barbeiro) não encontrado"}) 
     # Dados Horarios
     dias_semana = data.get('dias', [])
-    horarios_list = data.get('horarios', [])
+    horarios_list = data.get('horarios', [])    
 
     # Criando os horários
-    for dia in dias_semana:
-        for horario in horarios_list:
-            if not horario or horario.strip() in ["", "0"]:
-                continue  # ignora horários vazios ou inválidos
+    for dia in horarios_list:
+        hora_inicio = horarios_list[dia]["horaInicio"]
+        hora_fim = horarios_list[dia]["horaFim"]
+        
+        horario_obj = Horarios(
+            dia_semana = dia,
+            hora_inicio = hora_inicio,
+            hora_fim = hora_fim,
+            #idlocal=local   
+        )
+        horario_obj.save()
 
-            try:
-                horario_formatado = datetime.strptime(horario.strip(), '%H:%M').time()
-            except ValueError:
-                return False, f"Horário inválido: {horario}. Use o formato HH:MM."
-
-            horario_obj = Horarios(
-                dia_semana=dia,
-                horarios=horario_formatado,
-                idlocal=local
-            )
-            horario_obj.save()
-
-    return True, "Cadastro realizado com sucesso!"
-
-def logout_view(request):
-    request.session.flush()  # Limpa todos os dados da sessão
-    return redirect('login')  # Redireciona para a página de login
+    return JsonResponse({'status':True,'msg': "Cadastro realizado com sucesso!"})

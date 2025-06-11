@@ -16,6 +16,15 @@ urlpatterns = [
     #    LOGIN E CADASTRO
     path("api/cadastro/", views.cadastro_view, name="api_cadastro"),
     path("api/login/", views.login_view, name="api_login"),
+    path("locals/<int:id>/", views.cadastro_local_view, name="api_cadastro_local"),
+    #path("forgotPassword", views.forgot_password_view, name="api_cforgot_password"),
+
+    #    SERVIÇO
+    path("services/<int:id>/", views.cadastro_servico_view, name="api_cadastro_servico"),
+
+    #HORARIOS
+    path("schedule/<int:id>/", views.cadastrar_horario_view, name="api_cadastro_horario"),
+    
 ]
 
 # cadastro local, serviço e horario

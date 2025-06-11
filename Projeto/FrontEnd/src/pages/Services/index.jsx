@@ -80,7 +80,10 @@ export function Services() {
       token: token,
     };
 
-    const response = await api.post("/services", dados, {
+    const userString = localStorage.getItem('user');
+    const user1 = JSON.parse(userString);
+
+    const response = await api.post(`/services/${user1.id}/`, dados, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

@@ -12,7 +12,7 @@ import { Container, Context, Title, DayContainer, StyledLink } from "./style";
 const diasDaSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
 
 export function Schedule() {
-    const { signOut } = useAuth();
+    const { signOut, user } = useAuth();
 
     const [horarios, setHorarios] = useState({});
     const [diaSelecionado, setDiaSelecionado] = useState(null);
@@ -133,7 +133,7 @@ export function Schedule() {
         };
 
         try {
-            const response = await api.post("/schedule", dados, {
+            const response = await api.post(`/schedule/${user.id}/`, dados, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

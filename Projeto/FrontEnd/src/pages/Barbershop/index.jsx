@@ -82,19 +82,21 @@ export function BarberShop() {
       ...formData,
       token: token,
     };
+    const userString = localStorage.getItem('user');
+    const user1 = JSON.parse(userString);
 
-    const response = await api.post("/locals", dados, {
+    const response = await api.post(`/locals/${user1.id}/`, dados, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
-    if (response.data.success) {
+    if (response.status) {
       alert("Cadastro realizado com sucesso! ✅");
       limparCampos();
       navigate("/");
     } else {
-      alert("Erro: " + response.data.message);
+      alert("Erro: " + response.msg);
     }
   }
 

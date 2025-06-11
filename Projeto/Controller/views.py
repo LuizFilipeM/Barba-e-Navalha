@@ -1,15 +1,10 @@
-from ..Login_Autenticacao.views import login, cadastro, editar_perfil, deletar_perfil
-from ..Gestao_Agendamento.views import (
-    inserir_agendamento,
-    remover_agendamento,
-    atualiza_agendamento,
-    lista_agendamentos,
-)
+from ..Login_Autenticacao.views import *
+from ..Gestao_Agendamento.views import *
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-
+@csrf_exempt
 def processar_requisicao(request):
     
     try:
@@ -80,7 +75,7 @@ def listar_agendamentos_view(request):
     return lista_agendamentos(data)
 
 @csrf_exempt
-def editar_perfil_view(request,id):
+def editar_perfil_view(request, id):
     data = processar_requisicao(request)
 
     if request.method == "DELETE":
@@ -88,3 +83,30 @@ def editar_perfil_view(request,id):
     
     elif request.method == "PUT":
         return editar_perfil(data, id)
+
+@csrf_exempt
+def cadastro_local_view(request,id):
+    response = verifica_local(id)
+    response = json.loads(response.content)
+    if response['status'] == True:
+        data = processar_requisicao(request)
+        response = cadastrar_local(data,id)
+    return JsonResponse({'status':False, 'msg': "Voce ja possui uma barbearia."})
+
+@csrf_exempt
+def delete_local_view(request,id):
+    response = apagar_local(id)
+    return response
+
+@csrf_exempt
+def cadastro_servico_view(request, id):
+    data = processar_requisicao(request)
+    response = cadastrar_servico(data, id)
+    return response
+
+@csrf_exempt
+def cadastrar_horario_view(request, id):
+    data = processar_requisicao(request)
+    print(id)
+    response = cadastrar_horario(data, id)
+    return response

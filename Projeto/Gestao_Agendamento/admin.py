@@ -1,9 +1,21 @@
 from django.contrib import admin
-from .models import Local, Horarios, Agenda, Servicos
 
-admin.site.register(Local)
-admin.site.register(Horarios)
-admin.site.register(Servicos)
+from Projeto.Login_Autenticacao.models import *
+
+
+
 @admin.register(Agenda)
 class AgendaAdmin(admin.ModelAdmin):
-    list_display = ('id', 'data', 'hora', 'idcliente', 'idservicos', 'idbarbeiro')
+    list_display = ('id', 'data', 'hora', 'idbarbeiro', 'idcliente', 'idservicos')
+
+@admin.register(Horarios)
+class HorariosAdmin(admin.ModelAdmin):
+    list_display = ('id', 'dia_semana', 'hora_inicio', 'hora_fim')
+
+@admin.register(Local)
+class LocalAdmin(admin.ModelAdmin):
+    list_display = ('id', 'nome_local', 'endereco', 'cnpj', 'telefone', 'idservicos', 'idhorarios', 'barbeirousuarioid')
+
+@admin.register(Servicos)
+class SericosAdmin(admin.ModelAdmin):
+    list_display = ('id', 'nome', 'descricao', 'preco', 'tempo', 'idlocal')
