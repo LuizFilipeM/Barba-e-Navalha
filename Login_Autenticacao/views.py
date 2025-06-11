@@ -360,7 +360,7 @@ def recuperar_dados_perfil(usuario_id):
             'message': str(e)
         }
 
-def editar_perfil(data):
+def editar_perfil(data, id):
     senha = data.get('password')
     try:
         usuario = Usuario.objects.get(id=data['usuario_id'])
@@ -412,10 +412,9 @@ def deletar_perfil_view(request):
 
     return render(request, 'Projeto/usuario_deletar_perfil.html')
 
-def deletar_perfil(data):
-    usuario_id = data.get('usuario_id')
+def deletar_perfil(id):
     try:
-        usuario = Usuario.objects.get(id=usuario_id)
+        usuario = Usuario.objects.get(id=id)
 
         if usuario.tipo == 'Cliente':
             cliente = Cliente.objects.get(id=usuario)
