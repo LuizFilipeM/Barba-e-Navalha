@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext } from "react"
 import { useNavigate } from "react-router-dom"
-import { api } from "../services/api"
+//import { api } from "../services/api"
 
 const AuthContext = createContext({})
 
@@ -44,7 +44,7 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  /*
+  
   async function signIn({ email, password }) {
     const foundUser = mockUsers.find(
       user => user.email === email && user.password === password
@@ -68,9 +68,9 @@ export function AuthProvider({ children }) {
     }
 
     return { success: false, message: "E-mail não encontrado!" }
-  }*/
+  }
 
-  async function signIn({ email, password }) {
+  /*async function signIn({ email, password }) {
     
     const response = await api.post("/api/login/", {
       email,
@@ -94,7 +94,7 @@ export function AuthProvider({ children }) {
       
       return { success: false, message: "Erro ao conectar com o servidor." }
     }
-  }
+  }*/
 
   function signOut() {
     setUser(null)

@@ -54,8 +54,8 @@ export function Barber() {
               </List>
             </>
           )}
-          {/*<Link to="/services">Cadastrar Serviços</Link>
-          <Link to="/schedule">Cadastrar Horarios</Link>*/}
+          <Link to="/services">Cadastrar Serviços</Link>
+          <Link to="/schedule">Cadastrar Horarios</Link>
         </Context>
       ) : (
         <RegisterLink>
