@@ -302,7 +302,8 @@ def obter_local_agendamento_logica(data):
             return False, f"Nenhum local de trabalho encontrado para o barbeiro '{barbeiro.nome}'."
 
         # Monta a query para o mapa com nome e endereço do local
-        query_mapa = f"{local_obj.nome_local}, {local_obj.endereco}"
+        # query_mapa = f"{local_obj.nome_local}, {local_obj.endereco}"
+        query_mapa = f"{local_obj.endereco}"
         map_url = gerar_url_mapa_incorporado(query_mapa)
 
         resultado = {
@@ -407,7 +408,8 @@ def listar_locais_barbeiro_logica(data):
         # Itera sobre CADA local encontrado para construir a lista de resultados.
         locais_com_mapa = []
         for local_obj in locais_do_barbeiro:
-            query_mapa = f"{local_obj.nome_local}, {local_obj.endereco}"
+            # query_mapa = f"{local_obj.nome_local}, {local_obj.endereco}" # Tem que ser nome e local real
+            query_mapa = f"{local_obj.endereco}"
             map_url = gerar_url_mapa_incorporado(query_mapa)
             locais_com_mapa.append({
                 "local_nome": local_obj.nome_local,
@@ -476,3 +478,32 @@ def listar_agendamentos_barbeiro_logica(data):
         import traceback
         traceback.print_exc()
         return False, f"Erro inesperado: {str(e)}"
+    
+def listar_todas_barbearias_logica(data):
+    """
+    Busca e lista todas as barbearias (Locais) cadastradas no banco de dados.
+    O argumento 'data' não é usado aqui, mas é mantido por consistência.
+    """
+    try:
+        # Usa .all() para buscar todos os objetos do modelo Local
+        todas_as_barbearias = Local.objects.all().order_by('nome_local')
+        
+        if not todas_as_barbearias.exists():
+            return True, [] # Retorna sucesso com uma lista vazia se não houver barbearias
+
+        resultado = []
+        for local in todas_as_barbearias:
+            resultado.append({
+                'id': local.id,
+                'nome_local': local.nome_local,
+                'endereco': local.endereco,
+                'telefone': local.telefone,
+                'cnpj': local.cnpj # Adicionado CNPJ se for útil
+            })
+
+        return True, resultado
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return False, f"Erro inesperado ao listar as barbearias: {str(e)}"

@@ -22,6 +22,9 @@
   <button onclick="obterProximoAgendamento()">Obter Próximo Agendamento e Local</button>
   <button onclick="listarLocaisBarbeiro()">Listar Locais de um Barbeiro</button>
   <button onclick="listarAgendamentosDoBarbeiro()">Listar Agenda do Barbeiro</button>
+  <hr>
+  <button onclick="listarTodasAsBarbearias()">Listar Todas as Barbearias</button>
+  <!-- <button onclick="listarLocaisDoBarbeiro()">Mostrar mapa do local do barbeiro</button> -->
 
   <pre id="saida"></pre>
 
@@ -131,18 +134,70 @@
       });
     }
 
+    // function listarLocaisBarbeiro() {
+    //   // Use um nome de barbeiro que exista e que esteja associado a um ou mais locais.
+    //   enviar("/listar_locais_barbeiro/", "listar_locais_barbeiro", {
+    //     barbeiro_nome: "Lucas Barbeiro" 
+    //   });
+    // }
     function listarLocaisBarbeiro() {
-      // Use um nome de barbeiro que exista e que esteja associado a um ou mais locais.
-      enviar("/listar_locais_barbeiro/", "listar_locais_barbeiro", {
-        barbeiro_nome: "Lucas Barbeiro" 
+      // Esta função agora vai chamar a API, receber o JSON e construir o HTML
+      const acao = "listar_locais_barbeiro";
+      const dados = { barbeiro_nome: "Lucas Barbeiro" }; // Usa o nome, como a função lógica espera
+
+      // A função 'enviar' faz a chamada da API. Vamos modificar o que acontece depois.
+      fetch("/central/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ acao, dados })
+      })
+      .then(res => res.json())
+      .then(json => {
+          const out = document.getElementById("saida");
+          
+          // 1. Exibe o JSON bruto (como antes)
+          out.textContent = JSON.stringify(json, null, 2);
+
+          // 2. <<< INÍCIO DA MÁGICA: Constrói o HTML a partir do JSON >>>
+          if (json.success && json.resultado && json.resultado.locais) {
+              let htmlParaMostrar = `<h2>Locais de Atuação de: ${json.resultado.barbeiro_nome}</h2>`;
+
+              json.resultado.locais.forEach(local => {
+                  htmlParaMostrar += `
+                      <div style="border: 1px solid #ccc; margin-top: 15px; padding: 10px;">
+                          <h3>${local.local_nome}</h3>
+                          <p><strong>Endereço:</strong> ${local.endereco}</p>
+                          <p><strong>URL do Mapa:</strong> ${local.map_url}</p>
+                          <iframe
+                              width="100%"
+                              height="300"
+                              style="border:0;"
+                              loading="lazy"
+                              src="${local.map_url}">
+                          </iframe>
+                      </div>
+                  `;
+              });
+              
+              // Adiciona o HTML gerado abaixo do JSON bruto
+              out.innerHTML += '<hr>' + htmlParaMostrar;
+          }
+          // <<< FIM DA MÁGICA >>>
       });
     }
-    function listarAgendamentosDoBarbeiro() {
-      // Use um ID de barbeiro que exista no seu banco de dados
-      enviar("/listar_agendamentos_barbeiro/", "listar_agendamentos_barbeiro", {
-        barbeiro_id: 1 // Use um ID válido
-      });
+    function listarTodasAsBarbearias() {
+      // Nenhum dado extra é necessário, apenas a ação
+      enviar("/listar_todas_barbearias/", "listar_todas_barbearias", {});
     }
+
+    // Em teste_controller.html - CORRETO PARA ESTA ABORDAGEM
+    // function listarLocaisDoBarbeiro() {
+    //   const barbeiroIdParaTestar = 1; // ID do barbeiro para testar
+    //   console.log(`Redirecionando para a página de locais do barbeiro com ID: ${barbeiroIdParaTestar}`);
+      
+    //   // A linha abaixo muda de página, carregando o template com o mapa
+    //   window.location.href = `/barbeiro/${barbeiroIdParaTestar}/locais/`; 
+    // }
     
   </script>
 </body>

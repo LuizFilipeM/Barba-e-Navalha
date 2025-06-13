@@ -14,7 +14,8 @@ from .gestao_agendamento import (
     obter_local_agendamento_logica,
     obter_proximo_agendamento_e_local_logica,
     listar_locais_barbeiro_logica,
-    listar_agendamentos_barbeiro_logica
+    listar_agendamentos_barbeiro_logica,
+    listar_todas_barbearias_logica
 )
 
 def processar_requisicao(request):
@@ -159,6 +160,13 @@ def processar_requisicao(request):
         return {
             'success': success,
             'agendamentos': resultado if success else [],
+            'message': '' if success else resultado
+        }
+    elif url == '/listar_todas_barbearias/' or acao == 'listar_todas_barbearias':
+        success, resultado = listar_todas_barbearias_logica(dados_payload)
+        return {
+            'success': success,
+            'barbearias': resultado if success else [],
             'message': '' if success else resultado
         }
     
