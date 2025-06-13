@@ -1,5 +1,7 @@
 import { useState } from "react"
 import { Link, useNavigate} from "react-router-dom"
+import { GoogleLogin } from '@react-oauth/google';
+import { api } from "../../services/api"
 
 import { Header } from "../../components/Header"
 import { Input } from "../../components/Input"
@@ -32,6 +34,25 @@ export function SignIn() {
     navigate("/");
   }
 
+  const handleLoginSuccess = async (credentialResponse) => {
+    const { credential } = credentialResponse;
+
+    const response = await api.post('/oauth/login/google-oauth2/', {
+        token: credential
+      });
+
+    if (response.data.success) {
+      console.log("Usuário autenticado com sucesso!");
+
+      const data = response.data;
+      console.log("Usuário autenticado:", data);
+
+      localStorage.setItem("token", data.token);
+    } else {
+      console.error("Erro ao autenticar com o backend");
+    }
+  };
+
   return (
     <>
       <Header links={[
@@ -62,6 +83,10 @@ export function SignIn() {
               <Link to="/forgotPassword">Esqueceu a senha?</Link>
             </BackLinkWrapper>
             <Button type="submit" title="Entrar"/>
+            <GoogleLogin
+              onSuccess={handleLoginSuccess}
+              onError={() => console.log('Login com Google falhou')}
+            />
             <BackLinkWrapper style={{ textAlign: "center", marginTop: "1rem"}}>
               <Link to="/">Voltar</Link>
             </BackLinkWrapper>
