@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/hookAuth";
+import { api } from "../../services/api";
 /*import { useNavigate } from "react-router-dom";*/
 /*import { useLocal } from "../../hooks/hookLocal";*/
 
@@ -14,11 +15,26 @@ export function Client() {
   /*const navigate = useNavigate();*/
   /*const { allLocals, loading } = useLocal();*/
 
-  const [localSelecionado, setLocalSelecionado] = useState(null);
+  /*const [localSelecionado, setLocalSelecionado] = useState(null);
   const [horariosSelecionados, setHorariosSelecionados] = useState({});
-  const [agendamentoSelecionado, setAgendamentoSelecionado] = useState(null);
+  const [agendamentoSelecionado, setAgendamentoSelecionado] = useState(null);*/
+  const [barbearias, setBarbearias] = useState([]);
 
-  const toggleDetalhes = (id) => {
+  useEffect(() => {
+    async function fetchBarbearias() {
+      const response = await api.get("/barbershops");
+      setBarbearias(response.data);
+      
+      if (response.data.success) {
+        console.log("Barbearias carregadas com sucesso!");
+      } else {
+        alert("Erro: " + response.data.message);
+      }
+    }
+    fetchBarbearias();
+  } ,[]);
+
+  /*const toggleDetalhes = (id) => {
     setLocalSelecionado((prevId) => (prevId === id ? null : id));
     setHorariosSelecionados({});
   };
@@ -55,7 +71,7 @@ export function Client() {
         "\n"
       )}`
     );
-  };
+  };*/
 
   return (
     <>
@@ -68,7 +84,7 @@ export function Client() {
         ]}
       />
 
-      <Main>
+      {/*<Main>
         <Title>Barbearias disponíveis</Title>
         <Section>
           {MOCKED_LOCALS.map((local) => (
@@ -148,18 +164,27 @@ export function Client() {
             </Card>
           ))}
         </Section>
-      </Main>
+      </Main>*/}
 
-      {/*<div>
-        <h3>Locais disponíveis:</h3>
-          <ul>
-            {allLocals.map((local) => (
-              <li key={local.id}>
-                {local.nome} 
-              </li>
-            ))}
-          </ul>
-      </div> */}
+      <Main>
+        <Title>Barbearias disponíveis</Title>
+        <Section>
+          {barbearias.length === 0 ? (
+            <p style={{ textAlign: "center", color: "#666" }}>
+              Nenhuma barbearia disponível no momento.
+            </p>
+          ) : (
+            barbearias.map((local) => (
+              <Card key={local.id}>
+                <CardHeader>{local.nomeLocal}</CardHeader>
+                <Address>
+                  📍 {local.rua}, {local.bairro}, {local.cidadeLocal}
+                </Address>
+              </Card>
+            ))
+          )}
+        </Section>
+      </Main>
 
       <Footer />
     </>
