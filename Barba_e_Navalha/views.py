@@ -47,4 +47,3 @@ def mostrar_locais_do_barbeiro(request, barbeiro_id):
         # Em caso de erro, você pode renderizar uma página de erro ou levantar um Http404
         print(f"Erro ao buscar locais do barbeiro: {e}")
         raise Http404("Página não encontrada ou erro ao processar a requisição.")
-# <<< FIM DA ALTERAÇÃO >>>
