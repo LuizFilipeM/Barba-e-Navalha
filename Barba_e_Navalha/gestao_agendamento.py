@@ -58,7 +58,6 @@ def inserir_agendamento_logica(data):
         novo_agendamento_fim_dt = novo_agendamento_inicio_dt + datetime.timedelta(minutes=duracao_novo_servico_min)
         print(f"DEBUG: Tentando agendar de {novo_agendamento_inicio_dt} até {novo_agendamento_fim_dt}")
 
-        # --- INÍCIO DA VERIFICAÇÃO DE CONFLITOS CORRIGIDA ---
 
         # 1. VERIFICAÇÃO DE CONFLITO PARA O BARBEIRO
         agendamentos_barbeiro_no_dia = Agenda.objects.filter(idbarbeiro=barbeiro_solicitado, data=data_obj).select_related('idservicos')
@@ -70,10 +69,8 @@ def inserir_agendamento_logica(data):
                 print(f"DEBUG Barbeiro: Verificando conflito com agendamento existente ID {ag_existente.id} das {existente_inicio_dt} às {existente_fim_dt}")
                 if _check_overlap(novo_agendamento_inicio_dt, novo_agendamento_fim_dt, existente_inicio_dt, existente_fim_dt):
                     # Lógica de sugestão de outros barbeiros...
-                    # ... (esta parte já estava correta, então a omiti para focar na correção do bug)
                     return False, f"O barbeiro {barbeiro_solicitado.nome} já possui um agendamento conflitante neste horário."
 
-        # 2. VERIFICAÇÃO DE CONFLITO PARA O CLIENTE
         agendamentos_cliente_no_dia = Agenda.objects.filter(idcliente=cliente, data=data_obj).select_related('idservicos')
         print(f"DEBUG Cliente: Encontrados {agendamentos_cliente_no_dia.count()} agendamentos para o cliente {cliente.nome} no dia {data_obj}")
         
@@ -85,8 +82,6 @@ def inserir_agendamento_logica(data):
                 print(f"DEBUG Cliente: Verificando conflito com agendamento existente ID {ag_existente.id} das {existente_inicio_dt} às {existente_fim_dt}")
                 if _check_overlap(novo_agendamento_inicio_dt, novo_agendamento_fim_dt, existente_inicio_dt, existente_fim_dt):
                     return False, f"Você (cliente {cliente.nome}) já possui um agendamento conflitante neste horário ({existente_inicio_dt.strftime('%H:%M')} às {existente_fim_dt.strftime('%H:%M')})."
-
-        # --- FIM DA VERIFICAÇÃO DE CONFLITOS ---
 
         # Se não houver conflitos, prosseguir com a criação
         success_calendar, event_id_calendar, msg_calendar_or_link = criar_evento(
@@ -272,7 +267,7 @@ def lista_agendamentos_logica(data):
         return True, resultado_final
 
     except Exception as e:
-        # ... (seu tratamento de erro)
+        # seu tratamento de erro
         return False, f"Erro inesperado ao listar agendamentos: {str(e)}"
     
 # Adicione esta nova função ao final do arquivo:
@@ -302,7 +297,7 @@ def obter_local_agendamento_logica(data):
             return False, f"Nenhum local de trabalho encontrado para o barbeiro '{barbeiro.nome}'."
 
         # Monta a query para o mapa com nome e endereço do local
-        # query_mapa = f"{local_obj.nome_local}, {local_obj.endereco}"
+        # query_mapa = f"{local_obj.nome_local}, {local_obj.endereco}" # usa o endereço real
         query_mapa = f"{local_obj.endereco}"
         map_url = gerar_url_mapa_incorporado(query_mapa)
 
@@ -320,7 +315,7 @@ def obter_local_agendamento_logica(data):
     except Exception as e:
         return False, f"Erro inesperado: {str(e)}"
 
-# Adicione ao final de Barba_e_Navalha/gestao_agendamento.py
+
 
 def obter_proximo_agendamento_e_local_logica(data):
     try:
@@ -355,8 +350,8 @@ def obter_proximo_agendamento_e_local_logica(data):
 
         # O restante da lógica para obter local e mapa continua igual
         barbeiro = proximo_agendamento.idbarbeiro
-        # ... (código existente para encontrar local e gerar map_url)
-        # ...
+        
+        
 
         local_obj = Local.objects.filter(barbeirousuarioid=barbeiro).first()
         if not local_obj:
@@ -382,7 +377,7 @@ def obter_proximo_agendamento_e_local_logica(data):
         return True, resultado
 
     except Exception as e:
-        # ... (seu tratamento de erro)
+        # seu tratamento de erro
         return False, f"Erro inesperado: {str(e)}"
 
 def listar_locais_barbeiro_logica(data):
@@ -394,12 +389,11 @@ def listar_locais_barbeiro_logica(data):
         if not barbeiro_nome:
             return False, "Nome do barbeiro não fornecido."
         
-        # Usamos .get() que garante que apenas um barbeiro com esse nome seja encontrado.
+        # Usa .get() que garante que apenas um barbeiro com esse nome seja encontrado.
         # Se houver nomes duplicados, um erro será lançado, o que é um bom controle.
         barbeiro = Barbeiro.objects.get(nome=barbeiro_nome)
-        
-        # CORREÇÃO PRINCIPAL AQUI:
-        # Usamos .filter() para buscar TODOS os locais associados a este barbeiro.
+
+        # Usa .filter() para buscar TODOS os locais associados a este barbeiro.
         locais_do_barbeiro = Local.objects.filter(barbeirousuarioid=barbeiro)
 
         if not locais_do_barbeiro.exists():
@@ -448,7 +442,6 @@ def listar_agendamentos_barbeiro_logica(data):
 
         filtro_futuros = Q(data__gt=data_atual) | Q(data=data_atual, hora__gte=hora_atual)
 
-        # <<< INÍCIO DA CORREÇÃO >>>
         # O argumento posicional (filtro_futuros) agora vem ANTES do argumento de palavra-chave.
         agendamentos = Agenda.objects.filter(
             filtro_futuros,
@@ -457,7 +450,6 @@ def listar_agendamentos_barbeiro_logica(data):
             'idcliente', 
             'idservicos'
         ).order_by('data', 'hora')
-        # <<< FIM DA CORREÇÃO >>>
 
         resultado = []
         for ag in agendamentos:
