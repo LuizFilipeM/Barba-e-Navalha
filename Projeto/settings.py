@@ -41,19 +41,41 @@ INSTALLED_APPS = [
     "Projeto.Login_Autenticacao",
     "Projeto.Gestao_Agendamento",
     "Projeto.Controller",
-    'corsheaders',
+    "corsheaders",
+    "social_django",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'corsheaders.middleware.CorsMiddleware',
+    "social_django.middleware.SocialAuthExceptionMiddleware",
 ]
+
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+
+SOCIAL_AUTH_PIPELINE = (
+    'social_core.pipeline.social_auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    'social_core.pipeline.social_auth.auth_allowed',
+    'social_core.pipeline.social_auth.social_user',
+    'social_core.pipeline.user.get_username',
+    'social_core.pipeline.user.create_user',
+    'Projeto.pipeline.save_usuario_personalizado',  # pipeline para gmail
+    'Projeto.pipeline.redirecionar_pos_login', # pipeline para gmail 
+    'social_core.pipeline.social_auth.associate_user',
+    'social_core.pipeline.social_auth.load_extra_data',
+    'social_core.pipeline.user.user_details',
+)
 
 ROOT_URLCONF = "Projeto.urls"
 
@@ -74,7 +96,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "Projeto.wsgi.application"
 
-CORS_ALLOW_ALL_ORIGINS = True
+
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    "http://localhost:8001",
+]
 
 CORS_ALLOW_HEADERS = [
     "authorization",
@@ -88,6 +115,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8001",
     "http://localhost:8000",
 ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 
 # Database
@@ -103,6 +132,14 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'barba.e.navalha@gmail.com'
+EMAIL_HOST_PASSWORD = 'qfpllgpnvyzsbszg'
+DEFAULT_FROM_EMAIL = "Sistema Barba e Navalha <barba.e.navalha@gmail.com>"
 
 
 # Password validation
@@ -145,3 +182,11 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+MAPS_API_KEY = 'AIzaSyCggWDsg2QeSz6Ic8_jXeCg-CV4akZzg0s'
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '483286834912-9clasapa8op0ftt23sur6dr25fjdff2l.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
+
+LOGIN_REDIRECT_URL = '/pos-login'
+LOGOUT_REDIRECT_URL = '/'

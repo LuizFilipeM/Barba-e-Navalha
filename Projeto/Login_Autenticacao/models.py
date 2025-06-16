@@ -58,7 +58,8 @@ class Agenda(models.Model):
     hora = models.TimeField(db_column='Hora', blank=True, null=True)   
     idbarbeiro = models.ForeignKey(Barbeiro, models.DO_NOTHING, db_column='IDBarbeiro', blank=True, null=True)   
     idcliente = models.ForeignKey(Cliente, models.DO_NOTHING, db_column='IDCliente', blank=True, null=True)   
-    idservicos = models.ForeignKey(Servicos, models.DO_NOTHING, db_column='IDServicos', blank=True, null=True)   
+    idservicos = models.ForeignKey(Servicos, models.DO_NOTHING, db_column='IDServicos', blank=True, null=True) 
+    google_calendar_event_id = models.CharField(db_column='GoogleCalendarEventID', max_length=255, blank=True, null=True)  
 
     class Meta:
         managed = False
@@ -69,6 +70,7 @@ class Horarios(models.Model):
     dia_semana = models.CharField(db_column='Dia_semana', max_length=7, blank=True, null=True)   
     hora_inicio = models.TimeField(db_column='Hora_inicio', blank=True, null=True)   
     hora_fim = models.TimeField(db_column='Hora_fim', blank=True, null=True) 
+    idlocal = models.ForeignKey('Local', models.DO_NOTHING, db_column='IDLocal', blank=True, null=True) 
 
     class Meta:
         managed = False

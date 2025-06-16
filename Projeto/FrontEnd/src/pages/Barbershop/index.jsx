@@ -12,7 +12,7 @@ import { Container, Context, Title, StyledLink } from "./style";
 
 export function BarberShop() {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
 
   const [formData, setFormData] = useState({
     nomeLocal: "",
@@ -82,21 +82,19 @@ export function BarberShop() {
       ...formData,
       token: token,
     };
-    const userString = localStorage.getItem('user');
-    const user1 = JSON.parse(userString);
 
-    const response = await api.post(`/locals/${user1.id}/`, dados, {
+    const response = await api.post(`/locals/${user.id}/`, dados, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
-    if (response.status) {
+    if (response.data.status === true) {
       alert("Cadastro realizado com sucesso! ✅");
       limparCampos();
       navigate("/");
     } else {
-      alert("Erro: " + response.msg);
+      alert("Erro: " + response.data.msg);
     }
   }
 

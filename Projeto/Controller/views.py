@@ -1,16 +1,18 @@
+from Projeto.Gestao_Agendamento.gestao_agendamento import *
 from ..Login_Autenticacao.views import *
 from ..Gestao_Agendamento.views import *
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+
 @csrf_exempt
 def processar_requisicao(request):
-    
     try:
         data = json.loads(request.body)
         return data
     except json.JSONDecodeError:
+        print("Erro ao processar JSON")
         return JsonResponse(
             {"success": False, "message": "Json inválido"}, status=400
         )
@@ -45,53 +47,55 @@ def login_view(request):
 @csrf_exempt
 def cadastro_view(request):
     data = processar_requisicao(request)
-    success, msg = cadastro(data)
+    data = cadastro(data)
 
-    return JsonResponse(
-        {
-            "success": success,
-            "message": msg,
-        }
-    )
+    return data
 
 @csrf_exempt
 def inserir_agendamento_view(request):
     data = processar_requisicao(request)
-    return inserir_agendamento(data)
+    return inserir_agendamento_logica(data)
 
 @csrf_exempt
 def remover_agendamento_view(request):
     data = processar_requisicao(request)
-    return remover_agendamento(data)
+    return remover_agendamento_logica(data)
 
 @csrf_exempt
 def atualizar_agendamento_view(request):
     data = processar_requisicao(request)
-    return atualiza_agendamento(data)
+    return atualiza_agendamento_logica(data)
 
 @csrf_exempt
 def listar_agendamentos_view(request):
     data = processar_requisicao(request)
-    return lista_agendamentos(data)
+    return lista_agendamentos_logica(data)
 
 @csrf_exempt
-def editar_perfil_view(request, id):
+def editar_perfil_view(request, id):    
     data = processar_requisicao(request)
 
     if request.method == "DELETE":
         return deletar_perfil(id)
     
     elif request.method == "PUT":
-        return editar_perfil(data, id)
+        response = editar_perfil(data, id)
+        
+        return response
 
 @csrf_exempt
 def cadastro_local_view(request,id):
-    response = verifica_local(id)
-    response = json.loads(response.content)
-    if response['status'] == True:
+    status, msg = verifica_local(id)
+    if status == False:
         data = processar_requisicao(request)
-        response = cadastrar_local(data,id)
-    return JsonResponse({'status':False, 'msg': "Voce ja possui uma barbearia."})
+        return cadastrar_local(data,id)
+         
+    return JsonResponse({'status':False, 'msg': msg})
+
+@csrf_exempt
+def editar_local_view(request,id):
+    data = processar_requisicao(request)
+    return editar_local(data,id)
 
 @csrf_exempt
 def delete_local_view(request,id):
@@ -107,6 +111,52 @@ def cadastro_servico_view(request, id):
 @csrf_exempt
 def cadastrar_horario_view(request, id):
     data = processar_requisicao(request)
-    print(id)
     response = cadastrar_horario(data, id)
+    return response
+
+@csrf_exempt
+def forgot_pass_view(request):
+    
+    email = processar_requisicao(request)
+    print(email)
+    response = recuperar_senha(email)
+    return response
+
+@csrf_exempt
+def obtem_local_view(request):
+    data = processar_requisicao(request)
+    response = obter_local_agendamento_logica(data)
+    return response
+
+@csrf_exempt
+def prox_agend_view(request):
+    data = processar_requisicao(request)
+    response = obter_proximo_agendamento_e_local_logica(data)
+    return response
+
+@csrf_exempt
+def local_barbeiro_view(request):
+
+    response = listar_locais_barbeiro_logica()
+    return response
+
+@csrf_exempt
+def agenda_barbeiro_view(request):
+    data = processar_requisicao(request)
+    response = listar_agendamentos_barbeiro_logica(data)
+    return response
+
+@csrf_exempt
+def recuperar_dados_perfil_view(request,id):
+    response = recuperar_dados_perfil(id)
+    return response
+
+@csrf_exempt
+def recuperar_senha_view(request,id):
+    response = recuperar_senha(request, id)
+    return response
+
+@csrf_exempt
+def recuperar_barber_view(request,id):
+    response = recuperar_senha(request, id)
     return response

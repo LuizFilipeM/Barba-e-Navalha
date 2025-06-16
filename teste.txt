@@ -1,0 +1,64 @@
+############         EDIÇÃO DE LOCAL               ############
+
+curl -X POST http://localhost:8000/local-edit/69/ \
+     -H "Content-Type: application/json" \
+     -d '{"nomeLocal": "Navaia", "rua":"rua", "bairro":"bairro",
+     "numero":"123", "cidadeLocal":"cidade", "telefone":"321"}'
+
+
+
+############         APAGAR LOCAL               ############
+curl -X POST http://localhost:8000/local-delete/73/ \
+     -H "Content-Type: application/json" \
+     -d '{}'
+
+
+############         INSERIR AGENDAMENTO               ############
+curl -X POST http://localhost:8000/inserir-agendamento/ \
+     -H "Content-Type: application/json" \
+     -d '{"cliente":"cliente", "barbeiro":"barbeiro", "servico":"28", "data": "2025-06-19", "horario": "10:00"}'
+
+
+
+############         EDITAR    AGENDAMENTO               ############
+curl -X POST http://localhost:8000/atualizar-agendamento/ \
+     -H "Content-Type: application/json" \
+     -d '{"agendamento_id": 14, "data":"2025-06-16"}'
+
+
+############         LISTAR    AGENDAMENTO     DE UM CLIENTE          ############
+curl -X POST http://localhost:8000/listar-agendamentos/ \
+     -H "Content-Type: application/json" \
+     -d '{"cliente":"cliente"}'
+
+
+
+############         REMOVER    AGENDAMENTO               ############
+curl -X POST http://localhost:8000/remover-agendamento/ \
+     -H "Content-Type: application/json" \
+     -d '{"agendamento_id": 14}'
+
+
+
+
+---------------------  TENTAR ABRIR LINK DO MAPS E VER O QUE DÁ ----------------------------------
+
+############         RETORNA LOCAL  AGENDAMENTO      ############
+curl -X POST http://localhost:8000/prox-agendamento/ \
+     -H "Content-Type: application/json" \
+     -d '{"cliente_nome":"cliente"}'
+
+
+
+
+############         RETORNA LOCAL  BARBEIRO      ############
+curl -X POST http://localhost:8000/lista-local-barber/ \
+     -H "Content-Type: application/json" \
+     -d '{"barbeiro_nome":"barbeiro"}'
+     
+
+############         RETORNA ANGENDA  BARBEIRO      ############
+curl -X POST http://localhost:8000/lista-agenda-barber/ \
+     -H "Content-Type: application/json" \
+     -d '{"barbeiro_id":59}'
+     

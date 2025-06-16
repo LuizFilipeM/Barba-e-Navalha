@@ -1,0 +1,11 @@
+Adicao de passagem do id via url para cadastro e delete de barbearia (delete sem rota)
+Adicao de passagem do id via url para cadastro de servico
+Todos os retornos com formato jsonResponse
+
+
+__________________________________________________________________________________________________
+
+cadastro de local nao possui campo para telefone, horario
+cadastro de horario nao possui campo id barbeiro
+verificar mensagens de confirmação do front (dando erro mesmo com retorno certo)
+ao cadastrar mais de uma barbearia para mesmo barbeiro, a mensagem de retorno é incorreta

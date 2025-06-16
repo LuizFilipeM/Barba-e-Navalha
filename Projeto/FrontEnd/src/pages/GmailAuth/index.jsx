@@ -14,16 +14,13 @@ const TipoUsuario = {
   Barbeiro: "1",
 };
 
-export function SignUp() {
+export function GmailAuth() {
   const [formData, setFormData] = useState({
     tipo: TipoUsuario.Cliente,
-    name: "",
     cpf: "",
     telefone: "",
     cidade: "",
     data_nascimento: "",
-    email: "",
-    password: "",
   });
 
   const navigate = useNavigate();
@@ -35,13 +32,10 @@ export function SignUp() {
 
   function validarCampos() {
     const campos = [
-      { nome: "Nome", valor: formData.name },
       { nome: "CPF", valor: formData.cpf },
       { nome: "Telefone", valor: formData.telefone },
       { nome: "Cidade", valor: formData.cidade },
       { nome: "Data de Nascimento", valor: formData.data_nascimento },
-      { nome: "E-mail", valor: formData.email },
-      { nome: "Senha", valor: formData.password },
     ];
 
     for (const campo of campos) {
@@ -56,13 +50,10 @@ export function SignUp() {
   function limparCampos() {
     setFormData({
       tipo: TipoUsuario.Cliente,
-      name: "",
       cpf: "",
       telefone: "",
       cidade: "",
       data_nascimento: "",
-      email: "",
-      password: "",
     });
   }
 
@@ -84,20 +75,19 @@ export function SignUp() {
       ...formData,
       tipo: formData.tipo === TipoUsuario.Cliente ? "Cliente" : "Barbeiro",
       data_nascimento: formatarData(formData.data_nascimento),
-      token: btoa(`${formData.email}:${Date.now()}`),
     };
 
    
-    const response = await api.post("/api/cadastro/", dados, {
+    const response = await api.post("/cadastro-google/", dados, {
       headers: { "Content-Type": "application/json" },
     });
 
-    if (response.data.status === true) {
+    if (response.data.success) {
       alert("Cadastro realizado com sucesso! ");
       limparCampos();
       navigate("/");
     } else {
-      alert("Erro: " + response.data.msg);
+      alert("Erro: " + response.data.message);
       limparCampos();
     }
   }
@@ -123,7 +113,6 @@ export function SignUp() {
               <option value={TipoUsuario.Barbeiro}>Barbeiro</option>
             </Select>
 
-            <Input name="name" label="Nome" placeholder="Nome" type="text" value={formData.name} onChange={handleChange} />
             <Input name="cpf" label="CPF" placeholder="CPF" type="text" value={formData.cpf} onChange={handleChange} />
             <Input name="telefone" label="Telefone" placeholder="Telefone" type="text" value={formData.telefone} onChange={handleChange} />
             <Input name="cidade" label="Cidade" placeholder="Cidade" type="text" value={formData.cidade} onChange={handleChange} />
@@ -135,8 +124,6 @@ export function SignUp() {
               value={formData.data_nascimento}
               onChange={handleChange}
             />
-            <Input name="email" label="E-mail" placeholder="E-mail" type="email" value={formData.email} onChange={handleChange} />
-            <Input name="password" label="Senha" placeholder="Senha" type="password" value={formData.password} onChange={handleChange} />
 
             <Button type="submit" title="Cadastrar" />
 

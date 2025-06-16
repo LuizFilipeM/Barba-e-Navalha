@@ -9,7 +9,7 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const navigate = useNavigate()
 
-  const mockUsers = [
+  /*const mockUsers = [
     {
       id: 1,
       tipo: "Cliente", // Cliente
@@ -32,7 +32,7 @@ export function AuthProvider({ children }) {
       email: "barbeiro@email.com",
       password: "123456",
     }
-  ]
+  ]*/
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user")
@@ -44,8 +44,8 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  /*
-  async function signIn({ email, password }) {
+  
+  /*async function signIn({ email, password }) {
     const foundUser = mockUsers.find(
       user => user.email === email && user.password === password
     )
@@ -91,8 +91,6 @@ export function AuthProvider({ children }) {
     } else {
      
       return { success: false, message: "Credenciais inválidas!" }
-      
-      return { success: false, message: "Erro ao conectar com o servidor." }
     }
   }
 

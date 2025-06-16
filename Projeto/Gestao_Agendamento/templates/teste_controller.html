@@ -1,81 +1,149 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-  <title>Teste de Agendamento (JSON)</title>
+  <meta charset="UTF-8">
+  <title>Teste de Controller REST</title>
 </head>
 <body>
-  <h2>Inserir Agendamento</h2>
-  <button onclick="inserirAgendamento()">Inserir</button>
+  <h2>Teste de Funções via Controller</h2>
 
-  <h2>Remover Agendamento</h2>
-  <button onclick="removerAgendamento()">Remover</button>
+  <label><input type="checkbox" id="useGet"> Usar GET</label><br><br>
 
-  <h2>Atualizar Agendamento</h2>
-  <button onclick="atualizarAgendamento()">Atualizar</button>
+  <button onclick="login()">Login</button>
+  <button onclick="cadastro()">Cadastro</button>
+  <button onclick="editar()">Editar Perfil</button>
+  <button onclick="deletar()">Deletar Perfil</button>
+  <hr>
+  <button onclick="agendar()">Agendar</button>
+  <button onclick="atualizar()">Atualizar Agendamento</button>
+  <button onclick="remover()">Remover Agendamento</button>
+  <button onclick="listar()">Listar Agendamentos</button>
+  <hr>
+  <button onclick="obterProximoAgendamento()">Obter Próximo Agendamento e Local</button>
+  <button onclick="listarLocaisBarbeiro()">Listar Locais de um Barbeiro</button>
+  <button onclick="listarAgendamentosDoBarbeiro()">Listar Agenda do Barbeiro</button>
 
-  <h2>Listar Agendamentos</h2>
-  <button onclick="listarAgendamentos()">Listar</button>
-
-  <pre id="output"></pre>
+  <pre id="saida"></pre>
 
   <script>
-    const output = document.getElementById('output');
+    const out = document.getElementById("saida");
 
-    function inserirAgendamento() {
-      const dados = {
-        cliente: "João Silva",
-        barbeiro: "Lucas Barbeiro",
-        servico: 1,
-        data: "25-05-2025",
-        horario: "15:00"
-      };
+    function enviar(rota, acao, dados) {
+      const useGet = document.getElementById('useGet').checked;
 
-      fetch("/inserir-agendamento/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dados)
-      })
-      .then(res => res.json())
-      .then(json => output.textContent = JSON.stringify(json, null, 2));
-    }
-
-    function removerAgendamento() {
-      const dados = { agendamento_id: 28 };
-
-      fetch("/remover-agendamento/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dados)
-      })
-      .then(res => res.json())
-      .then(json => output.textContent = JSON.stringify(json, null, 2));
-    }
-
-    function atualizarAgendamento() {
-      const dados = {
-        agendamento_id: 20,
-        cliente_id: 2,
-        data: "2025-05-25",
-        hora: "16:00",
-        servico: 2
-      };
-
-      fetch("/atualizar-agendamento/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dados)
-      })
-      .then(res => res.json())
-      .then(json => output.textContent = JSON.stringify(json, null, 2));
-    }
-
-    function listarAgendamentos() {
-      const cliente = "João";
-
-      fetch(`/lista-agendamentos/?cliente=${encodeURIComponent(cliente)}`)
+      if (useGet) {
+        const query = new URLSearchParams({ acao, ...dados }).toString();
+        fetch(`/central/?${query}`)
+          .then(res => res.json())
+          .then(json => {
+            out.textContent = JSON.stringify(json, null, 2);
+            if (json.redirect_url) window.location.href = json.redirect_url;
+          });
+      } else {
+        fetch("/central/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ acao, dados })
+        })
         .then(res => res.json())
-        .then(json => output.textContent = JSON.stringify(json, null, 2));
+        .then(json => {
+          out.textContent = JSON.stringify(json, null, 2);
+          if (json.redirect_url) window.location.href = json.redirect_url;
+        });
+      }
     }
+
+    function login() {
+      enviar("/login/", "login", {
+        email: "cliente1@example.com",
+        senha: "senha123"
+      });
+    }
+
+    function cadastro() {
+      enviar("/cadastro/", "cadastro", {
+        nome: "Pedro Barbeiro",
+        senha: "senha",
+        tipo: "Barbeiro",
+        telefone: "1199999978",
+        data_nascimento: "1998-05-12",
+        email: "novo_cliente2@example.com",
+        cidade: "São João del Rei",
+        cpf: "12345678901"
+      });
+    }
+
+    function editar() {
+      enviar("/editar_perfil/", "editar_perfil", {
+        usuario_id: 1,
+        nome: "João Silva",
+        senha: "senha123",
+        email: "cliente1@example.com",
+        telefone: "1188888888",
+        cidade: "Campinas"
+      });
+    }
+
+    function deletar() { 
+      enviar("/deletar_perfil/", "deletar_perfil", {
+        usuario_id: 1
+      });
+    }
+
+    function agendar() {
+      enviar("/agendar/", "inserir_agendamento", {
+        cliente: "Luis Felipe",
+        barbeiro: "Lucas Barbeiro",
+        servico: 11,
+        data: "2025-06-14",
+        horario: "09:00"
+      });
+    }
+
+
+    function atualizar() {
+      enviar("/atualizar_agendamento/", "atualiza_agendamento", {
+        agendamento_id: 65,
+        cliente_id: 6,
+        data: "2025-06-11",
+        hora: "16:00",
+        servico: 13
+      });
+    }
+
+    function remover() {
+      enviar("/remover_agendamento/", "remover_agendamento", {
+        agendamento_id: 64
+      });
+    }
+
+    function listar() {
+      enviar("/listar_agendamentos/", "listar_agendamentos", {
+        cliente: "Luis Felipe"
+      });
+    }
+
+    // Adicione ao script do seu teste_controller.html
+    function obterProximoAgendamento() {
+      // Use um nome de cliente que tenha agendamentos futuros
+      enviar("/obter_proximo_agendamento/", "obter_proximo_agendamento", {
+        cliente_nome: "Luis Felipe" 
+      });
+    }
+
+    function listarLocaisBarbeiro() {
+      // Use um nome de barbeiro que exista e que esteja associado a um ou mais locais.
+      enviar("/listar_locais_barbeiro/", "listar_locais_barbeiro", {
+        barbeiro_nome: "Lucas Barbeiro" 
+      });
+    }
+    function listarAgendamentosDoBarbeiro() {
+      // Use um ID de barbeiro que exista no seu banco de dados
+      enviar("/listar_agendamentos_barbeiro/", "listar_agendamentos_barbeiro", {
+        barbeiro_id: 1 // Use um ID válido
+      });
+    }
+    
   </script>
 </body>
 </html>
