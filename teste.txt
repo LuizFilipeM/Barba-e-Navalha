@@ -16,7 +16,7 @@ curl -X POST http://localhost:8000/local-delete/73/ \
 ############         INSERIR AGENDAMENTO               ############
 curl -X POST http://localhost:8000/inserir-agendamento/ \
      -H "Content-Type: application/json" \
-     -d '{"cliente":"cliente", "barbeiro":"barbeiro", "servico":"28", "data": "2025-06-19", "horario": "10:00"}'
+     -d '{"cliente":"cliente", "barbeiro":"luiz", "servico":"29", "data": "2025-06-19", "horario": "10:00"}'
 
 
 

@@ -97,7 +97,7 @@ def inserir_agendamento_logica(data):
             data_agendamento_str, horario_str, duracao_novo_servico_min,
             local_do_barbeiro.endereco, local_do_barbeiro.nome_local
         )
-
+        
         if not success_calendar:
             return JsonResponse({'status':False,'msg': f"Falha ao criar evento no Google Calendar: {msg_calendar_or_link}"})
 

@@ -73,14 +73,13 @@ def listar_agendamentos_view(request):
 
 @csrf_exempt
 def editar_perfil_view(request, id):    
-    data = processar_requisicao(request)
 
     if request.method == "DELETE":
         return deletar_perfil(id)
     
     elif request.method == "PUT":
-        response = editar_perfil(data, id)
-        
+        data = processar_requisicao(request)
+        response = editar_perfil(data, id)    
         return response
 
 @csrf_exempt
