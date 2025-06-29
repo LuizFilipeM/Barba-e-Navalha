@@ -7,12 +7,12 @@
 <body>
   <h2>Teste de Funções via Controller</h2>
 
-  <label><input type="checkbox" id="useGet"> Usar GET</label><br><br>
+  <!-- <label><input type="checkbox" id="useGet"> Usar GET</label><br><br> -->
 
-  <button onclick="login()">Login</button>
-  <button onclick="cadastro()">Cadastro</button>
-  <button onclick="editar()">Editar Perfil</button>
-  <button onclick="deletar()">Deletar Perfil</button>
+  <!-- <button onclick="login()">Login</button> -->
+  <!-- <button onclick="cadastro()">Cadastro</button> -->
+  <!-- <button onclick="editar()">Editar Perfil</button> -->
+  <!-- <button onclick="deletar()">Deletar Perfil</button> -->
   <hr>
   <button onclick="agendar()">Agendar</button>
   <button onclick="atualizar()">Atualizar Agendamento</button>
@@ -24,6 +24,14 @@
   <button onclick="listarAgendamentosDoBarbeiro()">Listar Agenda do Barbeiro</button>
   <hr>
   <button onclick="listarTodasAsBarbearias()">Listar Todas as Barbearias</button>
+  <button onclick="listarTodosOsServicos()">Listar Todos os Serviços</button>
+  <button onclick="listarTodosOsHorarios()">Listar Todos os Horários</button>
+  <hr>
+  <button onclick="criarIntervalo()">Criar Intervalo</button>
+  <hr>
+  <button onclick="editarLocalDoBarbeiro()">Editar Local do Barbeiro</button>
+  <button onclick="editarServicoDoBarbeiro()">Editar Serviço</button>
+  <button onclick="excluirServicoDoBarbeiro()">Excluir Serviço</button>
   <!-- <button onclick="listarLocaisDoBarbeiro()">Mostrar mapa do local do barbeiro</button> -->
 
   <pre id="saida"></pre>
@@ -31,164 +39,158 @@
   <script>
     const out = document.getElementById("saida");
 
-    function enviar(rota, acao, dados) {
-      const useGet = document.getElementById('useGet').checked;
+    // MELHORIA 2: Removido o parâmetro 'rota' que não era usado
+    function enviar(acao, dados) {
+      const checkboxElement = document.getElementById('useGet');
+      // Usando a verificação robusta que implementamos antes
+      const useGet = checkboxElement ? checkboxElement.checked : false;
+
+      let fetchPromise; // Variável para armazenar a promessa do fetch
 
       if (useGet) {
+        // Para GET, os dados são enviados na URL
         const query = new URLSearchParams({ acao, ...dados }).toString();
-        fetch(`/central/?${query}`)
-          .then(res => res.json())
-          .then(json => {
-            out.textContent = JSON.stringify(json, null, 2);
-            if (json.redirect_url) window.location.href = json.redirect_url;
-          });
+        fetchPromise = fetch(`/central/?${query}`);
       } else {
-        fetch("/central/", {
+        // Para POST, os dados são enviados no corpo da requisição
+        fetchPromise = fetch("/central/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ acao, dados })
-        })
-        .then(res => res.json())
-        .then(json => {
-          out.textContent = JSON.stringify(json, null, 2);
-          if (json.redirect_url) window.location.href = json.redirect_url;
         });
       }
+
+      // MELHORIA 1: Lógica centralizada para tratar a resposta e os erros
+      fetchPromise
+        .then(res => {
+          // Se a resposta do servidor não for "OK" (ex: erro 404, 500), lança um erro
+          if (!res.ok) {
+            throw new Error(`Erro de Servidor: Status ${res.status}`);
+          }
+          // Tenta converter a resposta para JSON
+          return res.json(); 
+        })
+        .then(json => {
+          // Se tudo deu certo, mostra o JSON e redireciona se necessário
+          out.textContent = JSON.stringify(json, null, 2);
+          if (json.redirect_url) {
+            window.location.href = json.redirect_url;
+          }
+        })
+        .catch(err => {
+          // Se qualquer etapa anterior falhar, este 'catch' será executado
+          console.error("Falha na requisição:", err); // Mostra o erro detalhado no console (F12)
+          out.textContent = "Ocorreu um erro ao processar a requisição.\n\n" + err + "\n\nVerifique o console do navegador (F12) para mais detalhes.";
+        });
     }
 
+    // As chamadas para enviar() agora não precisam mais do primeiro parâmetro 'rota'
     function login() {
-      enviar("/login/", "login", {
-        email: "cliente1@example.com",
-        senha: "senha123"
-      });
+      enviar("login", { email: "cliente1@example.com", senha: "senha123" });
     }
 
     function cadastro() {
-      enviar("/cadastro/", "cadastro", {
-        nome: "Pedro Barbeiro",
-        senha: "senha",
-        tipo: "Barbeiro",
-        telefone: "1199999978",
-        data_nascimento: "1998-05-12",
-        email: "novo_cliente2@example.com",
-        cidade: "São João del Rei",
-        cpf: "12345678901"
+      enviar("cadastro", {
+        nome: "Pedro Barbeiro", senha: "senha", tipo: "Barbeiro",
+        telefone: "1199999978", data_nascimento: "1998-05-12",
+        email: "novo_cliente2@example.com", cidade: "São João del Rei", cpf: "12345678901"
       });
     }
 
     function editar() {
-      enviar("/editar_perfil/", "editar_perfil", {
-        usuario_id: 1,
-        nome: "João Silva",
-        senha: "senha123",
-        email: "cliente1@example.com",
-        telefone: "1188888888",
-        cidade: "Campinas"
+      enviar("editar_perfil", {
+        usuario_id: 1, nome: "João Silva", senha: "senha123",
+        email: "cliente1@example.com", telefone: "1188888888", cidade: "Campinas"
       });
     }
 
     function deletar() { 
-      enviar("/deletar_perfil/", "deletar_perfil", {
-        usuario_id: 1
-      });
+      enviar("deletar_perfil", { usuario_id: 1 });
     }
 
     function agendar() {
-      enviar("/agendar/", "inserir_agendamento", {
-        cliente: "Luis Felipe",
-        barbeiro: "Lucas Barbeiro",
-        servico: 11,
-        data: "2025-06-14",
-        horario: "09:00"
+      enviar("inserir_agendamento", {
+        cliente: "Luis Felipe", barbeiro: "Lucas Barbeiro",
+        servico: 10, data: "2025-06-14", horario: "10:00"
       });
     }
 
-
     function atualizar() {
-      enviar("/atualizar_agendamento/", "atualiza_agendamento", {
-        agendamento_id: 65,
-        cliente_id: 6,
-        data: "2025-06-11",
-        hora: "16:00",
-        servico: 13
+      enviar("atualiza_agendamento", {
+        agendamento_id: 68, cliente_id: 6, data: "2025-06-15",
+        hora: "16:00", servico: 11
       });
     }
 
     function remover() {
-      enviar("/remover_agendamento/", "remover_agendamento", {
-        agendamento_id: 64
-      });
+      enviar("remover_agendamento", { agendamento_id: 68 });
     }
 
     function listar() {
-      enviar("/listar_agendamentos/", "listar_agendamentos", {
-        cliente: "Luis Felipe"
-      });
+      enviar("listar_agendamentos", { cliente: "Luis Felipe" });
     }
 
-    // Adicione ao script do seu teste_controller.html
     function obterProximoAgendamento() {
-      // Use um nome de cliente que tenha agendamentos futuros
-      enviar("/obter_proximo_agendamento/", "obter_proximo_agendamento", {
-        cliente_nome: "Luis Felipe" 
-      });
+      enviar("obter_proximo_agendamento", { cliente_nome: "Luis Felipe" });
     }
 
-    // function listarLocaisBarbeiro() {
-    //   // Use um nome de barbeiro que exista e que esteja associado a um ou mais locais.
-    //   enviar("/listar_locais_barbeiro/", "listar_locais_barbeiro", {
-    //     barbeiro_nome: "Lucas Barbeiro" 
-    //   });
-    // }
     function listarLocaisBarbeiro() {
-      // Esta função agora vai chamar a API, receber o JSON e construir o HTML
-      const acao = "listar_locais_barbeiro";
-      const dados = { barbeiro_nome: "Lucas Barbeiro" }; // Usa o nome, como a função lógica espera
+      enviar("listar_locais_barbeiro", { barbeiro_nome: "Lucas Barbeiro" });
+    }
 
-      // A função 'enviar' faz a chamada da API. Vamos modificar o que acontece depois.
-      fetch("/central/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ acao, dados })
-      })
-      .then(res => res.json())
-      .then(json => {
-          const out = document.getElementById("saida");
-          
-          // 1. Exibe o JSON bruto (como antes)
-          out.textContent = JSON.stringify(json, null, 2);
+    function listarLocaisDoBarbeiro() {
+      const barbeiroIdParaTestar = 1; 
+      console.log(`Redirecionando para a página de locais do barbeiro com ID: ${barbeiroIdParaTestar}`);
+      window.location.href = `/barbeiro/${barbeiroIdParaTestar}/locais/`;
+    }
 
-          // 2. <<< INÍCIO DA MÁGICA: Constrói o HTML a partir do JSON >>>
-          if (json.success && json.resultado && json.resultado.locais) {
-              let htmlParaMostrar = `<h2>Locais de Atuação de: ${json.resultado.barbeiro_nome}</h2>`;
+    function listarAgendamentosDoBarbeiro() {
+      enviar("listar_agendamentos_barbeiro", { barbeiro_id: 4 });
+    }
 
-              json.resultado.locais.forEach(local => {
-                  htmlParaMostrar += `
-                      <div style="border: 1px solid #ccc; margin-top: 15px; padding: 10px;">
-                          <h3>${local.local_nome}</h3>
-                          <p><strong>Endereço:</strong> ${local.endereco}</p>
-                          <p><strong>URL do Mapa:</strong> ${local.map_url}</p>
-                          <iframe
-                              width="100%"
-                              height="300"
-                              style="border:0;"
-                              loading="lazy"
-                              src="${local.map_url}">
-                          </iframe>
-                      </div>
-                  `;
-              });
-              
-              // Adiciona o HTML gerado abaixo do JSON bruto
-              out.innerHTML += '<hr>' + htmlParaMostrar;
-          }
-          // <<< FIM DA MÁGICA >>>
+    function listarTodasAsBarbearias() {
+        enviar("listar_todas_barbearias", {});
+    }
+    function listarTodosOsServicos() {
+        enviar("listar_todos_servicos", {});
+    }
+    function listarTodosOsHorarios() {
+        enviar("listar_todos_horarios", {});
+    }
+    function criarIntervalo() {
+        enviar("criar_intervalo", {
+        barbeiro_id: 7, // ID do barbeiro que quer o intervalo
+        data: "2025-06-27",
+        horario: "12:00", // Início do intervalo
+        duracao_minutos: 60 // Duração do intervalo em minutos
+        });
+    }
+    function editarLocalDoBarbeiro(){
+      enviar("editar_local",{
+        barbeiro_id: 1,
+        local_id: 7,
+        nome_local: "Barbearia Central - Filial Principal",
+        endereco: "Avenida Sete de Setembro, 274 - Centro",
+        telefone: "(32) 98429-8966"
       });
     }
-    function listarTodasAsBarbearias() {
-      // Nenhum dado extra é necessário, apenas a ação
-      enviar("/listar_todas_barbearias/", "listar_todas_barbearias", {});
+    function editarServicoDoBarbeiro() { 
+      enviar("editar_servico", {
+        barbeiro_id: 1, // ID do barbeiro "dono" do serviço
+        servico_id: 10,  // ID do serviço a ser editado
+        // Novos dados (pode enviar apenas os campos que quer mudar)
+        nome: "Corte Moderno com Tesoura",
+        preco: "45.00"
+      });
     }
+
+    function excluirServicoDoBarbeiro() {
+      enviar("excluir_servico", {
+        barbeiro_id: 4, // ID do barbeiro "dono" do serviço
+        servico_id: 12   // ID do serviço a ser excluído
+      });
+    }
+
 
     // Em teste_controller.html - CORRETO PARA ESTA ABORDAGEM
     // function listarLocaisDoBarbeiro() {

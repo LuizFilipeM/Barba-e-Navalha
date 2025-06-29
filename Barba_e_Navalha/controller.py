@@ -6,17 +6,7 @@ from django.shortcuts import render # Se usado
 from .login_cadastro import (
     login, cadastro, editar_perfil, deletar_perfil
 )
-from .gestao_agendamento import (
-    inserir_agendamento_logica,
-    remover_agendamento_logica,
-    atualiza_agendamento_logica,
-    lista_agendamentos_logica,
-    obter_local_agendamento_logica,
-    obter_proximo_agendamento_e_local_logica,
-    listar_locais_barbeiro_logica,
-    listar_agendamentos_barbeiro_logica,
-    listar_todas_barbearias_logica
-)
+from .gestao_agendamento import *
 
 def processar_requisicao(request):
     dados_resposta = {} # Inicializa um dicionário para a resposta
@@ -167,6 +157,44 @@ def processar_requisicao(request):
         return {
             'success': success,
             'barbearias': resultado if success else [],
+            'message': '' if success else resultado
+        }
+    elif acao == 'listar_todos_servicos':
+        success, resultado = listar_todos_servicos_logica(dados_payload)
+        return{
+            'success': success,
+            'servicos': resultado if success else [],
+            'message': '' if success else resultado
+        }
+    elif acao == 'listar_todos_horarios':
+        success, resultado = listar_todos_horarios_logica(dados_payload)
+        return{
+            'success': success,
+            'horarios': resultado if success else [],
+            'message': '' if success else resultado
+        }
+    elif acao == 'criar_intervalo':
+        success, resultado = criar_intervalo_logica(dados_payload)
+        return{
+            'success': success,
+            'message': '' if success else resultado
+        }
+    elif acao == 'editar_local':
+        success, resultado = editar_local_barbeiro_logica(dados_payload)
+        return{
+            'success': success,
+            'message': '' if success else resultado
+        }
+    elif acao == 'editar_servico':
+        success, resultado = editar_servico_barbeiro_logica(dados_payload)
+        return{
+            'success': success,
+            'message': '' if success else resultado
+        }
+    elif acao == 'excluir_servico':
+        success, resultado = excluir_servico_barbeiro_logica(dados_payload)
+        return{
+            'success': success,
             'message': '' if success else resultado
         }
     
