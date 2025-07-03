@@ -2,6 +2,7 @@ from django.shortcuts import redirect
 from .models import Usuario
 
 def save_usuario_personalizado(backend, user, response, *args, **kwargs):
+    print("AQUI")
     request = kwargs.get('request')
 
     usuario, created = Usuario.objects.get_or_create(

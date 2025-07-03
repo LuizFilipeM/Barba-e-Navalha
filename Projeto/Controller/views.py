@@ -1,10 +1,19 @@
+from Projeto import settings
 from Projeto.Gestao_Agendamento.gestao_agendamento import *
 from ..Login_Autenticacao.views import *
 from ..Gestao_Agendamento.views import *
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.middleware.csrf import get_token
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from django.contrib.auth import get_user_model, login
+from django.views.decorators.csrf import ensure_csrf_cookie
 
+
+
+User = get_user_model()
 
 @csrf_exempt
 def processar_requisicao(request):
@@ -21,7 +30,7 @@ def processar_requisicao(request):
 def login_view(request):
     data = processar_requisicao(request)
 
-    success, msg, user_id, tipo, name, email, cpf, telefone, data_nascimento, cidade = login(data)
+    success, msg, user_id, tipo, name, email, cpf, telefone, data_nascimento, cidade = login1(data)
 
     if success:
         # Armazenando na sessão
@@ -155,7 +164,56 @@ def recuperar_senha_view(request,id):
     response = recuperar_senha(request, id)
     return response
 
+
 @csrf_exempt
-def recuperar_barber_view(request,id):
-    response = recuperar_senha(request, id)
-    return response
+def google_login(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Método não permitido"}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        token = data.get("token")
+
+        if not token:
+            return JsonResponse({"success": False, "message": "Token não fornecido"}, status=400)
+
+        # Verifica o token com o Google
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY)
+        email = idinfo["email"]
+        name = idinfo["name"]
+        sub = idinfo["sub"]
+
+        # Verifica se já existe um usuário com este e-mail
+        usuario = Usuario.objects.filter(email=email).first()
+        
+        if not usuario:
+            # Cria um novo usuário se não existir
+            usuario = Usuario.objects.create(
+                email= email,
+                senha= "",  # pode deixar em branco ou armazenar o ID do Google, se quiser
+            )
+       
+        r = pos_login(idinfo, usuario.id)
+        
+        #print("R: ", r)
+        # Aqui você pode gerar um token (JWT, etc). Por enquanto, retorna o usuário.
+        return JsonResponse({
+            "success": True,
+            "user": {
+                "id": usuario.id,
+                "email": usuario.email,
+                "tipo": usuario.tipo,
+                "id_google": sub,
+            }
+        })
+
+    except ValueError:
+        return JsonResponse({"success": False, "message": "Token inválido"}, status=400)
+
+    except Exception as e:
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
+    
+
+@ensure_csrf_cookie
+def csrf_token_view(request):
+    return JsonResponse({"detail": "CSRF cookie set"})

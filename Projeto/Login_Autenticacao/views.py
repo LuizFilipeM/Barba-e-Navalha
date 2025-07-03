@@ -5,6 +5,7 @@ from django.contrib.auth.hashers import make_password
 import json
 from django.http import JsonResponse
 from datetime import datetime
+from django.views.decorators.csrf import csrf_exempt
 
 # Para envio do email
 from django.template.loader import render_to_string
@@ -17,9 +18,8 @@ import random
 import string
 import uuid
 
-
           
-def login(data):
+def login1(data):
     email = data.get('email')
     senha = data.get('password')
 
@@ -90,68 +90,32 @@ def cadastro(data):
     # Se o cadastro foi bem-sucedido, exibe a mensagem de sucesso e redireciona
     return JsonResponse({"status":True, "msg":"Cadastro realizado com sucesso!"})
 
-##############################################################################################################
-
-def pos_login(request):
+def pos_login(data, id_usuario):
     # Verifica se o usuário está autenticado e se o usuario_id existe na sessão
-    if request.user.is_authenticated:
-        usuario_id = request.session.get('usuario_id')
-
-        if usuario_id:
-            try:
-                usuario = Usuario.objects.get(id=usuario_id)
-                request.session['usuario_id'] = usuario.id
-                request.session['usuario_tipo'] = usuario.tipo
-                request.session['usuario_nome'] = request.user.first_name + " " + request.user.last_name
-
-                # Se o tipo do usuário já está definido, redireciona para a home
-                if usuario.tipo:
-                    return redirect('home')
-                else:
-                    return redirect('cadastro_google')
-
-            except Usuario.DoesNotExist:
-                print("Usuario não encontrado")
-                return redirect('login')
-        else:
-            return redirect('login')
-    else:
-        return redirect('login')
-      
-def cadastro_google_view(request):
-    # Verifica se o usuário já está autenticado
-    usuario_id = request.session.get('usuario_id')
-    if not usuario_id:
-        return redirect('login')  # Se não tiver usuario_id, redireciona para login
-
-    usuario = Usuario.objects.get(id=usuario_id)
-
-    # Se o usuário já tiver um tipo (Cliente ou Barbeiro), redireciona para home
-    if usuario.tipo:
-        return redirect('home')
-
-    nome_google = request.user.first_name + " " + request.user.last_name
-
-    if request.method == 'POST' and request.headers.get('Content-Type') == 'application/json':
+    print("Entrou Pos login")
+    
+    if id_usuario:
         try:
-            data = json.loads(request.body)
-            data['usuario_id'] = usuario_id
-            data['nome_google'] = nome_google
-        except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'message': 'JSON inválido'}, status=400)
+            
+            usuario = Usuario.objects.get(id=id_usuario)
+            
+            # Se o tipo do usuário já está definido, redireciona para a home
+            if usuario.tipo: 
+                print("user tem tipo definido")
+                return True
+            else:
+                print("user nao tem tipo definido")
+                return redirect("/pos-login")
 
-        success, msg = cadastro_google(data)
-
-        return JsonResponse({
-            'success': success,
-            'message': msg,
-            'redirect_url': '/home' if success else ''
-        })
-
-    # Caso seja GET, apenas renderiza o formulário normalmente    
-    return render(request, 'Projeto/cadastro_google.html')
-
+        except Usuario.DoesNotExist:
+            print("Usuario não encontrado")
+            return False
+    else:
+        return False
+        
+@csrf_exempt
 def cadastro_google(data):
+    data = json.loads(data.body)
     tipo = data.get('tipo')
     usuario_id = data.get('usuario_id')
     nome = data.get('nome_google')
@@ -160,7 +124,7 @@ def cadastro_google(data):
     cidade = data.get('cidade')
     cpf = data.get('cpf')
     
-    usuario = Usuario.objects.get(id=usuario_id)
+    usuario = Usuario.objects.get(id=84)
     usuario.tipo = tipo
     usuario.save()
 
@@ -192,10 +156,6 @@ def cadastro_google(data):
         return JsonResponse ({"status":True, "msg":"Cadastro realizado com sucesso!"})
 
     return JsonResponse ({"status":False, "msg":"Erro no cadastro!"})
-
-
-##############################################################################################################
-
 
 def gerar_senha_temporaria(tamanho=8):
     caracteres = string.ascii_letters + string.digits

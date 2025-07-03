@@ -1,5 +1,5 @@
 from Projeto.Controller import views
-from django.urls import path
+from django.urls import include, path
 
 
 # Teste local
@@ -13,6 +13,9 @@ urlpatterns = [
     path("prox-agendamento/", views.prox_agend_view, name="obter_local_agendamentos"),
     path("barbershops/", views.local_barbeiro_view, name="obter_local_barbeiro"),
     path("lista-agenda-barber/", views.agenda_barbeiro_view, name="obter_agenda_barbeiro"),
+    path('oauth/', include('social_django.urls', namespace='social')),
+    path('cadastro-google/', views.cadastro_google, name='cad_g'),
+    
     
     #    PERFIL
     path("api/users/<int:id>", views.editar_perfil_view, name="editar_perfil"),
@@ -24,6 +27,8 @@ urlpatterns = [
     path("api/login/", views.login_view, name="api_login"),
     path("locals/<int:id>/", views.cadastro_local_view, name="api_cadastro_local"),
     path("forgotPassword", views.forgot_pass_view, name="api_forgot_password"),
+    
+
 
     #    SERVIÇO
     path("services/<int:id>/", views.cadastro_servico_view, name="api_cadastro_servico"),
@@ -34,8 +39,9 @@ urlpatterns = [
     #   LOCAL
     path("local-edit/<int:id>/", views.editar_local_view, name="api_editar_local"),
     path("local-delete/<int:id>/", views.delete_local_view, name="api_deletar_local"),
-    
-    
+
+    path("csrf/", views.csrf_token_view, name = 'get_cookie'),
+    path("api/google-login/", views.google_login),
 ]
 
 # cadastro local, serviço e horario

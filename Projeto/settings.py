@@ -70,8 +70,8 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.social_auth.social_user',
     'social_core.pipeline.user.get_username',
     'social_core.pipeline.user.create_user',
-    'Projeto.pipeline.save_usuario_personalizado',  # pipeline para gmail
-    'Projeto.pipeline.redirecionar_pos_login', # pipeline para gmail 
+    'Login_Autenticacao.pipeline.save_usuario_personalizado',  # pipeline para gmail
+    'Login_Autenticacao.pipeline.redirecionar_pos_login', # pipeline para gmail 
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',
     'social_core.pipeline.user.user_details',
@@ -185,8 +185,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 MAPS_API_KEY = 'AIzaSyCggWDsg2QeSz6Ic8_jXeCg-CV4akZzg0s'
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '483286834912-9clasapa8op0ftt23sur6dr25fjdff2l.apps.googleusercontent.com'
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '483286834912-ets6tpsv2lbn6oik0ej4pep1fs451jq9.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
 
 LOGIN_REDIRECT_URL = '/pos-login'
 LOGOUT_REDIRECT_URL = '/'
+

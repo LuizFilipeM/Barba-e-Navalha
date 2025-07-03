@@ -23,7 +23,7 @@ curl -X POST http://localhost:8000/inserir-agendamento/ \
 ############         EDITAR    AGENDAMENTO               ############
 curl -X POST http://localhost:8000/atualizar-agendamento/ \
      -H "Content-Type: application/json" \
-     -d '{"agendamento_id": 14, "data":"2025-06-16"}'
+     -d '{"agendamento_id": 19, "data":"2025-06-17"}'
 
 
 ############         LISTAR    AGENDAMENTO     DE UM CLIENTE          ############

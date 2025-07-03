@@ -88,7 +88,7 @@ export function Profile() {
 
         if (confirmDelete) {
             const response = await api.delete(`/api/users/${user.id}`);
-            if (response.data.staus === 'success') {
+            if (response.data.status === 'success') {
                 alert("Conta excluída com sucesso.");
                 signOut();
             } else {
