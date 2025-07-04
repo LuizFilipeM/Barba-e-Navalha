@@ -66,11 +66,6 @@ export function SignUp() {
     });
   }
 
-  function formatarData(data) {
-    const [dia, mes, ano] = data.split("/");
-    return `${ano}-${mes}-${dia}`;
-  }
-
   async function handleSignUp(e) {
     e.preventDefault();
 
@@ -83,7 +78,6 @@ export function SignUp() {
     const dados = {
       ...formData,
       tipo: formData.tipo === TipoUsuario.Cliente ? "Cliente" : "Barbeiro",
-      data_nascimento: formatarData(formData.data_nascimento),
       token: btoa(`${formData.email}:${Date.now()}`),
     };
 
@@ -116,29 +110,68 @@ export function SignUp() {
         <Context>
           <Title>Faça o seu cadastro</Title>
 
-          <Form onSubmit={handleSignUp}>
+          <Form>
             <label htmlFor="tipo">Tipo de usuário</label>
             <Select id="tipo" name="tipo" value={formData.tipo} onChange={handleChange}>
               <option value={TipoUsuario.Cliente}>Cliente</option>
               <option value={TipoUsuario.Barbeiro}>Barbeiro</option>
             </Select>
-
-            <Input name="name" label="Nome" placeholder="Nome" type="text" value={formData.name} onChange={handleChange} />
-            <Input name="cpf" label="CPF" placeholder="CPF" type="text" value={formData.cpf} onChange={handleChange} />
-            <Input name="telefone" label="Telefone" placeholder="Telefone" type="text" value={formData.telefone} onChange={handleChange} />
-            <Input name="cidade" label="Cidade" placeholder="Cidade" type="text" value={formData.cidade} onChange={handleChange} />
+            <Input 
+              name="name" 
+              label="Nome" 
+              placeholder="Nome" 
+              type="text" value={formData.name} 
+              onChange={handleChange} />
+            <Input 
+              name="cpf" 
+              label="CPF" 
+              placeholder="CPF" 
+              type="number" 
+              value={formData.cpf} 
+              onChange={handleChange} />
+            <Input 
+              name="telefone" 
+              label="Telefone" 
+              placeholder="Telefone" 
+              type="number" 
+              value={formData.telefone} 
+              onChange={handleChange} />
+          </Form>
+        </Context>
+        <Context>
+          <Form>
+            <Input 
+              name="cidade" 
+              label="Cidade" 
+              placeholder="Cidade" 
+              type="text" 
+              value={formData.cidade} 
+              onChange={handleChange} />
             <Input
               name="data_nascimento"
               label="Data de Nascimento"
               placeholder="DD/MM/AAAA"
-              type="text"
+              type="date"
               value={formData.data_nascimento}
               onChange={handleChange}
             />
-            <Input name="email" label="E-mail" placeholder="E-mail" type="email" value={formData.email} onChange={handleChange} />
-            <Input name="password" label="Senha" placeholder="Senha" type="password" value={formData.password} onChange={handleChange} />
+            <Input
+              style="padding: 0.5rem 0;"
+              name="email" 
+              label="E-mail" 
+              placeholder="E-mail" 
+              type="email" 
+              value={formData.email} 
+              onChange={handleChange} />
+            <Input 
+              name="password" 
+              label="Senha" 
+              placeholder="Senha" 
+              type="password" 
+              value={formData.password} 
+              onChange={handleChange} />
 
-            <Button type="submit" title="Cadastrar" />
+            <Button type="submit" title="Cadastrar" onClick={handleSignUp} />
 
             <BackLinkWrapper>
               <Link to="/">Voltar</Link>

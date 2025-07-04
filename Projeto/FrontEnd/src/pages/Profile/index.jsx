@@ -138,7 +138,7 @@ export function Profile() {
                         <label>
                             CPF:
                             <input
-                                type="text"
+                                type="number"
                                 name="cpf"
                                 value={formData.cpf}
                                 style={{ backgroundColor: 'rgb(166, 168, 173)', color: 'black' }}
@@ -148,7 +148,7 @@ export function Profile() {
                         <label>
                             Telefone:
                             <input
-                                type="text"
+                                type="number"
                                 name="telefone"
                                 value={formData.telefone}
                                 onChange={handleChange}

@@ -19,17 +19,19 @@ export const Home = () => {
         <Content>
           <TextContainer>
             <Title>Agende seu corte com os 
-              melhores barbeiros</Title>
-            <Description>Encontre barbearias próximas, veja serviços e horários disponíveis.
-              Agende seu corte com facilidade!</Description>
+              melhores barbeiros!</Title>
+            <Description>
+              Encontre barbearias próximas, veja serviços e horários disponíveis.<br/>
+              Agende seu corte com facilidade!
+            </Description>
             <ButtonGroup>
-              <Button 
-                title="Cadastre-se" 
-                onClick={() => navigate('/register')}
-              />
               <Button 
                 title="Login" 
                 onClick={() => navigate('/enter')}
+              />
+              <Button 
+                title="Cadastre-se" 
+                onClick={() => navigate('/register')}
               />
             </ButtonGroup>
           </TextContainer>

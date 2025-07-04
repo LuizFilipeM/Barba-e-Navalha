@@ -48,7 +48,7 @@ export function ForgotPassword() {
             />
             <Button type="submit" title="Enviar"/> 
             <BackLinkWrapper style={{ textAlign: "center", marginTop: "1rem"}}>
-              <Link to="/">Voltar</Link>
+              <Link to="/register">Voltar</Link>
             </BackLinkWrapper>
           </Form>
         </Context>

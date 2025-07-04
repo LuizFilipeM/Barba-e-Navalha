@@ -14,7 +14,6 @@ const TipoUsuario = {
   Barbeiro: "1",
 };
 
-
 export function GmailAuth() {
   const [formData, setFormData] = useState({
     tipo: TipoUsuario.Cliente,  
@@ -23,8 +22,6 @@ export function GmailAuth() {
     cidade: "",
     data_nascimento: "",
   });
-
-  
   
   async function fetchCsrfToken() {
     alert("jksh")
@@ -85,7 +82,7 @@ export function GmailAuth() {
 
   async function handleSignUp(e) {
     e.preventDefault();
-    
+
     const erro = validarCampos();
     if (erro) {
       alert(erro);
@@ -139,14 +136,33 @@ export function GmailAuth() {
               <option value={TipoUsuario.Barbeiro}>Barbeiro</option>
             </Select>
 
-            <Input name="cpf" label="CPF" placeholder="CPF" type="text" value={formData.cpf} onChange={handleChange} />
-            <Input name="telefone" label="Telefone" placeholder="Telefone" type="text" value={formData.telefone} onChange={handleChange} />
-            <Input name="cidade" label="Cidade" placeholder="Cidade" type="text" value={formData.cidade} onChange={handleChange} />
+
+            <Input 
+              name="cpf" 
+              label="CPF" 
+              placeholder="CPF" 
+              type="number" 
+              value={formData.cpf} 
+              onChange={handleChange} />
+            <Input 
+              name="telefone" 
+              label="Telefone" 
+              placeholder="Telefone" 
+              type="number" 
+              value={formData.telefone} 
+              onChange={handleChange} />
+            <Input 
+              name="cidade" 
+              label="Cidade" 
+              placeholder="Cidade" 
+              type="text" 
+              value={formData.cidade} 
+              onChange={handleChange} />
             <Input
               name="data_nascimento"
               label="Data de Nascimento"
               placeholder="DD/MM/AAAA"
-              type="text"
+              type="date"
               value={formData.data_nascimento}
               onChange={handleChange}
             />
