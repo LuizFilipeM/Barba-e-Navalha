@@ -4,6 +4,8 @@ export const Container = styled.section`
   background-color: #111827;
   color: white;
   padding: 1rem 0;
+  display: flex;
+  justify-content: space-between;
 `;
 
 export const Context = styled.main`
@@ -12,12 +14,14 @@ export const Context = styled.main`
   margin: 0rem auto;
   border-radius: 0.8rem;
   padding: 0.8rem;
+  align-items:center;
+  width: 40%;
 `;
 
 export const Title = styled.h2`
   text-align: center;
   margin-bottom: 1rem;
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: bold;
 `;
 
@@ -53,3 +57,4 @@ export const BackLinkWrapper = styled.div`
     }
   }
 `;
+

@@ -12,7 +12,7 @@ import { Container, Context, Title, StyledLink } from "./style";
 
 export function BarberShop() {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut} = useAuth();
 
   const [formData, setFormData] = useState({
     nomeLocal: "",
@@ -83,7 +83,9 @@ export function BarberShop() {
       token: token,
     };
 
-    const response = await api.post("/locals", dados, {
+    const userId = JSON.parse(localStorage.getItem("user"));
+
+    const response = await api.post(`/locals/${userId.id}`, dados, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

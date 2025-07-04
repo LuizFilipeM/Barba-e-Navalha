@@ -57,11 +57,6 @@ export function GmailAuth() {
     });
   }
 
-  function formatarData(data) {
-    const [dia, mes, ano] = data.split("/");
-    return `${ano}-${mes}-${dia}`;
-  }
-
   async function handleSignUp(e) {
     e.preventDefault();
 
@@ -74,7 +69,6 @@ export function GmailAuth() {
     const dados = {
       ...formData,
       tipo: formData.tipo === TipoUsuario.Cliente ? "Cliente" : "Barbeiro",
-      data_nascimento: formatarData(formData.data_nascimento),
     };
 
    
@@ -113,14 +107,32 @@ export function GmailAuth() {
               <option value={TipoUsuario.Barbeiro}>Barbeiro</option>
             </Select>
 
-            <Input name="cpf" label="CPF" placeholder="CPF" type="text" value={formData.cpf} onChange={handleChange} />
-            <Input name="telefone" label="Telefone" placeholder="Telefone" type="text" value={formData.telefone} onChange={handleChange} />
-            <Input name="cidade" label="Cidade" placeholder="Cidade" type="text" value={formData.cidade} onChange={handleChange} />
+            <Input 
+              name="cpf" 
+              label="CPF" 
+              placeholder="CPF" 
+              type="number" 
+              value={formData.cpf} 
+              onChange={handleChange} />
+            <Input 
+              name="telefone" 
+              label="Telefone" 
+              placeholder="Telefone" 
+              type="number" 
+              value={formData.telefone} 
+              onChange={handleChange} />
+            <Input 
+              name="cidade" 
+              label="Cidade" 
+              placeholder="Cidade" 
+              type="text" 
+              value={formData.cidade} 
+              onChange={handleChange} />
             <Input
               name="data_nascimento"
               label="Data de Nascimento"
               placeholder="DD/MM/AAAA"
-              type="text"
+              type="date"
               value={formData.data_nascimento}
               onChange={handleChange}
             />

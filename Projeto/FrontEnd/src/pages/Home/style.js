@@ -3,13 +3,11 @@ import styled from 'styled-components';
 export const Container = styled.section`
   background-color: #111827;
   color: white;
-  padding: 3rem 0;
 `;
 
 export const Content = styled.div`
-  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 1.5rem 1rem;
   display: flex;
   flex-direction: column;
 
@@ -31,8 +29,9 @@ export const TextContainer = styled.div`
 
 export const Title = styled.h1`
   font-size: 2.25rem;
-  font-weight: 700;
+  font-weight: 800;
   margin-bottom: 1rem;
+  text-align: center;
 
   @media (min-width: 768px) {
     font-size: 3rem;
@@ -41,13 +40,16 @@ export const Title = styled.h1`
 
 export const Description = styled.p`
   font-size: 1.25rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
+  text-align: center;
   color: #d1d5db;
 `;
 
 export const ButtonGroup = styled.div`
   display: flex;
-  gap: 1rem;
+  gap: 2rem;
+  margin-bottom: 1rem;
+  margin-left: 12rem;
 `;
 
 export const ImageContainer = styled.div`
