@@ -16,12 +16,30 @@ const TipoUsuario = {
 
 export function GmailAuth() {
   const [formData, setFormData] = useState({
-    tipo: TipoUsuario.Cliente,
+    tipo: TipoUsuario.Cliente,  
     cpf: "",
     telefone: "",
     cidade: "",
     data_nascimento: "",
   });
+  
+  async function fetchCsrfToken() {
+    alert("jksh")
+    const response = await fetch("http://localhost:8000/csrf/", {
+        method: "GET",
+        credentials: "include"  // necessário para receber cookies
+    });
+    const data = await response.json();
+    alert("CSRF token recebido:", data.csrfToken);
+    return data.csrfToken;
+}
+
+  function getCookie(name) {
+    return document.cookie
+        .split('; ')
+        .find(row => row.startsWith(name + '='))
+        ?.split('=')[1];
+  }
 
   const navigate = useNavigate();
 
@@ -57,6 +75,11 @@ export function GmailAuth() {
     });
   }
 
+  function formatarData(data) {
+    const [dia, mes, ano] = data.split("/");
+    return `${ano}-${mes}-${dia}`;
+  }
+
   async function handleSignUp(e) {
     e.preventDefault();
 
@@ -65,18 +88,24 @@ export function GmailAuth() {
       alert(erro);
       return;
     }
-
+    
     const dados = {
       ...formData,
       tipo: formData.tipo === TipoUsuario.Cliente ? "Cliente" : "Barbeiro",
+      data_nascimento: formatarData(formData.data_nascimento),
     };
-
-   
+    
+    const csrftoken = getCookie('csrftoken');
+    
     const response = await api.post("/cadastro-google/", dados, {
-      headers: { "Content-Type": "application/json" },
+      credentials: "include",  
+      headers: { "Content-Type": "application/json",
+        "X-CSRFToken": csrftoken
+      },
+      
     });
 
-    if (response.data.success) {
+    if (response.data.status === true) {
       alert("Cadastro realizado com sucesso! ");
       limparCampos();
       navigate("/");
@@ -106,6 +135,7 @@ export function GmailAuth() {
               <option value={TipoUsuario.Cliente}>Cliente</option>
               <option value={TipoUsuario.Barbeiro}>Barbeiro</option>
             </Select>
+
 
             <Input 
               name="cpf" 

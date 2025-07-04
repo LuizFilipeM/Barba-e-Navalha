@@ -42,7 +42,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(db_column='ID', primary_key=True, serialize=False)),
                 ('dia_semana', models.CharField(blank=True, db_column='Dia_semana', max_length=7, null=True)),
-                ('horarios', models.TimeField(blank=True, db_column='Horarios', null=True)),
+                ('hora_inicio', models.TimeField(blank=True, db_column='Hora_inicio', null=True)),
+                ('hora_fim', models.TimeField(blank=True, db_column='Hora_fim', null=True)),
             ],
             options={
                 'db_table': 'Horarios',
@@ -79,7 +80,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Barbeiro',
             fields=[
-                ('id', models.OneToOneField(db_column='ID', on_delete=django.db.models.deletion.DO_NOTHING, primary_key=True, serialize=False, to='Projeto.usuario')),
+                ('id', models.OneToOneField(db_column='ID', on_delete=django.db.models.deletion.DO_NOTHING, primary_key=True, serialize=False, to='Login_Autenticacao.Usuario')),
                 ('nome', models.CharField(blank=True, db_column='Nome', max_length=255, null=True)),
                 ('cpf', models.CharField(blank=True, db_column='CPF', max_length=14, null=True)),
                 ('telefone', models.CharField(blank=True, db_column='Telefone', max_length=16, null=True)),
@@ -94,7 +95,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Cliente',
             fields=[
-                ('id', models.OneToOneField(db_column='ID', on_delete=django.db.models.deletion.DO_NOTHING, primary_key=True, serialize=False, to='Projeto.usuario')),
+                ('id', models.OneToOneField(db_column='ID', on_delete=django.db.models.deletion.DO_NOTHING, primary_key=True, serialize=False, to='Login_Autenticacao.Usuario')),
                 ('cpf', models.CharField(blank=True, db_column='CPF', max_length=14, null=True)),
                 ('nome', models.CharField(blank=True, db_column='Nome', max_length=255, null=True)),
                 ('cidade', models.CharField(blank=True, db_column='Cidade', max_length=255, null=True)),

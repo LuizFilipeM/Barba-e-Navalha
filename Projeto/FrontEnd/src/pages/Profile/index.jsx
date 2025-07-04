@@ -76,7 +76,7 @@ export function Profile() {
             setFormData({ ...formData, oldPassword: "", newPassword: "", confirmNewPassword: "" });
             navigate("/");
         } else {
-            alert("Erro ao atualizar dados.");
+            alert("Erro ao atualizar dados: " + response.data.message   );
         }
     }
 
@@ -88,7 +88,7 @@ export function Profile() {
 
         if (confirmDelete) {
             const response = await api.delete(`/api/users/${user.id}`);
-            if (response.data.staus === 'success') {
+            if (response.data.status === 'success') {
                 alert("Conta excluída com sucesso.");
                 signOut();
             } else {

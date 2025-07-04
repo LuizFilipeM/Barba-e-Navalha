@@ -86,12 +86,12 @@ export function SignUp() {
       headers: { "Content-Type": "application/json" },
     });
 
-    if (response.data.success) {
+    if (response.data.status === true) {
       alert("Cadastro realizado com sucesso! ");
       limparCampos();
       navigate("/");
     } else {
-      alert("Erro: " + response.data.message);
+      alert("Erro: " + response.data.msg);
       limparCampos();
     }
   }

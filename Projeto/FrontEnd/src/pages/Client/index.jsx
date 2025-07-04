@@ -22,15 +22,21 @@ export function Client() {
 
   useEffect(() => {
     async function fetchBarbearias() {
-      const response = await api.get("/barbershops");
-      setBarbearias(response.data);
-      
-      if (response.data.success) {
-        console.log("Barbearias carregadas com sucesso!");
-      } else {
-        alert("Erro: " + response.data.message);
-      }
-    }
+      try {
+        const response = await api.get("/barbershops/");
+        setBarbearias(response.data.data.locais);
+        
+        if (response.data.status === true) {
+          console.log("Barbearias carregadas com sucesso!");
+        } else {
+          alert("Erro: " + response.data.message);
+        }
+        
+      } catch (error) {
+        console.error("Erro ao buscar barbearias:", error);
+        alert("Erro ao buscar barbearias. Tente novamente mais tarde.");
+        
+      }}
     fetchBarbearias();
   } ,[]);
 
@@ -175,10 +181,10 @@ export function Client() {
             </p>
           ) : (
             barbearias.map((local) => (
-              <Card key={local.id}>
-                <CardHeader>{local.nomeLocal}</CardHeader>
+              <Card key={local.local_nome}>
+                <CardHeader>{local.local_nome}</CardHeader>
                 <Address>
-                  📍 {local.rua}, {local.bairro}, {local.cidadeLocal}
+                  📍 {local.endereco}
                 </Address>
               </Card>
             ))

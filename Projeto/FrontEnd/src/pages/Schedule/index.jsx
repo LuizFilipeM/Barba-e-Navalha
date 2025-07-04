@@ -22,7 +22,7 @@ import {
 const diasDaSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
 
 export function Schedule() {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
 
   const [horarios, setHorarios] = useState({});
   const [diaSelecionado, setDiaSelecionado] = useState(null);
@@ -128,12 +128,12 @@ export function Schedule() {
 
     try {
       const response = await api.post(
-        "/schedule",
+        `/schedule/${user.id}/`,
         { horarios, token },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      if (response.data.success) {
+      if (response.data.status === true) {
         alert("Cadastro realizado com sucesso! ✅");
         setHorarios({});
         setDiaSelecionado(null);

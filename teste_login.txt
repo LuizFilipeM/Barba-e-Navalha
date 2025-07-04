@@ -1,0 +1,11 @@
+############         RECUPERAR PERFIL               ############
+curl -X POST http://localhost:8000/api/users/recover/59/ \
+     -H "Content-Type: application/json" \
+     -d '{"agendamento_id": 59}'
+
+
+    
+############         RECUPERAR SENHA               ############
+curl -X POST http://localhost:8000/api/users/recover-password/59/ \
+     -H "Content-Type: application/json" \
+     -d '{}'
