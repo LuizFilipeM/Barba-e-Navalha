@@ -161,10 +161,7 @@ def gerar_senha_temporaria(tamanho=8):
     caracteres = string.ascii_letters + string.digits
     return ''.join(random.choices(caracteres, k=tamanho))
 
-def recuperar_senha(data):   
-    email = data.get('email')
-    print(email)
-
+def recuperar_senha(email):   
     try:
         usuario = Usuario.objects.get(email=email)
     except Usuario.DoesNotExist:
@@ -356,40 +353,6 @@ def recuperar_dados_local(usuario_id):
             'message': str(e)
         }
 
-def editar_local(data, id):
-    try:
-        print("Buscando usuário...")
-        usuario = Usuario.objects.get(id=id)
-
-        print("Buscando barbeiro...")
-        barbeiro = Barbeiro.objects.get(id=usuario)
-
-        print("Buscando local...")
-        local = Local.objects.get(barbeirousuarioid=barbeiro)
-
-        print("Atualizando dados...")
-        rua = data.get('rua', '').strip()
-        bairro = data.get('bairro', '').strip()
-        numero = data.get('numero', '').strip()
-        cidade = data.get('cidadeLocal', '').strip()
-        endereco = f"{rua},{bairro},{numero},{cidade}"
-
-        print(data)
-        local.nome_local = data['nomeLocal']
-        local.endereco = endereco
-        local.telefone = data['telefone']
-        local.save()
-
-        print("Dados salvos com sucesso.")
-        return JsonResponse ({'status': 'success'})
-
-    except Usuario.DoesNotExist:
-        print("Usuário não encontrado.")
-        return JsonResponse ({'status': 'error', 'message': 'Usuário não encontrado'})
-    except Exception as e:
-        print("Erro ao editar local:", e)
-        return JsonResponse ({'status': 'error', 'message': str(e)})
-
 def apagar_local(id):
     usuario_id = id
 
@@ -482,4 +445,41 @@ def cadastrar_horario(data, id):
         horario_obj.save()
 
     return JsonResponse ({"status": True, "msg": "Cadastro realizado com sucesso!"})
+
+
+##################  FUNÇÃO SIMILAR À editar_local_barbeiro_logica (GESTAO_AGENDAMENTO) ##################
+
+def editar_local(data, id):
+    try:
+        print("Buscando usuário...")
+        usuario = Usuario.objects.get(id=id)
+
+        print("Buscando barbeiro...")
+        barbeiro = Barbeiro.objects.get(id=usuario)
+
+        print("Buscando local...")
+        local = Local.objects.get(barbeirousuarioid=barbeiro)
+
+        print("Atualizando dados...")
+        rua = data.get('rua', '').strip()
+        bairro = data.get('bairro', '').strip()
+        numero = data.get('numero', '').strip()
+        cidade = data.get('cidadeLocal', '').strip()
+        endereco = f"{rua},{bairro},{numero},{cidade}"
+
+        print(data)
+        local.nome_local = data['nomeLocal']
+        local.endereco = endereco
+        local.telefone = data['telefone']
+        local.save()
+
+        print("Dados salvos com sucesso.")
+        return JsonResponse ({'status': 'success'})
+
+    except Usuario.DoesNotExist:
+        print("Usuário não encontrado.")
+        return JsonResponse ({'status': 'error', 'message': 'Usuário não encontrado'})
+    except Exception as e:
+        print("Erro ao editar local:", e)
+        return JsonResponse ({'status': 'error', 'message': str(e)})
 

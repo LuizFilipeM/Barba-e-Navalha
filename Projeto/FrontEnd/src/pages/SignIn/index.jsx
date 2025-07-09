@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 
 import { GoogleLogin } from '@react-oauth/google';
@@ -12,7 +12,6 @@ import { Footer } from "../../components/Footer"
 
 import { Container, Context, Form, Title, BackLinkWrapper } from "./style"
 
-import { jwtDecode } from 'jwt-decode'
 
 export function SignIn() {
   const [email, setEmail] = useState("")
@@ -20,38 +19,6 @@ export function SignIn() {
   const { signIn } = useAuth()
   const navigate = useNavigate()
 
-  useEffect(() => {
-    carregarCsrfToken()
-  }, [])
-
-  function getCookie(name) {
-    let cookieValue = null
-    if (document.cookie && document.cookie !== "") {
-      const cookies = document.cookie.split(";")
-      for (let cookie of cookies) {
-        cookie = cookie.trim()
-        if (cookie.startsWith(name + "=")) {
-          cookieValue = decodeURIComponent(cookie.slice(name.length + 1))
-          break
-        }
-      }
-    }
-    return cookieValue
-  }
-
-  async function carregarCsrfToken() {
-  try {
-    await api.get("/csrf/", { withCredentials: true }); // Axios precisa disso
-    const token = getCookie("csrftoken");
-    if (token) {
-      alert("CSRF cookie carregado: " + token);
-    } else {
-      alert("CSRF cookie ainda está ausente após o GET.");
-    }
-  } catch (err) {
-    console.error("Erro ao carregar CSRF token:", err);
-  }
-}
 
   async function handleSignIn(event) {
     event.preventDefault()
@@ -73,20 +40,18 @@ export function SignIn() {
     const { credential } = credentialResponse
 
     try {
-      const csrfToken = getCookie("csrftoken")
       const response = await api.post("/api/google-login/", {
-      token: credential, 
-      
-});
+        token: credential,
+      });
 
       if (response.data.success) {
 
         const data = response.data
         localStorage.setItem("token", data.token)
-
-        if(data.user.tipo === null){
+        if( !data.user.tipo ){
           navigate("/pos-login")
         }
+        else navigate("/")
       } else {
         console.error("Erro ao autenticar com o backend")
       }
@@ -95,24 +60,7 @@ export function SignIn() {
     }
   }
 
-  const handleLoginSuccess = async (credentialResponse) => {
-    const { credential } = credentialResponse;
-
-    const response = await api.post('/oauth/login/google-oauth2/', {
-        token: credential
-      });
-
-    if (response.data.success) {
-      console.log("Usuário autenticado com sucesso!");
-
-      const data = response.data;
-      console.log("Usuário autenticado:", data);
-
-      localStorage.setItem("token", data.token);
-    } else {
-      console.error("Erro ao autenticar com o backend");
-    }
-  };
+  
 
   return (
     <>

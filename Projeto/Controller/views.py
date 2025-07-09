@@ -11,10 +11,9 @@ from google.auth.transport import requests
 from django.contrib.auth import get_user_model, login
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-
-
 User = get_user_model()
 
+# Função auxiliar: processa uma requisição e retorna os dados do body em um json
 @csrf_exempt
 def processar_requisicao(request):
     try:
@@ -25,7 +24,16 @@ def processar_requisicao(request):
         return JsonResponse(
             {"success": False, "message": "Json inválido"}, status=400
         )
+    except Exception as e:
+        print ("ERROR: ", str(e))
 
+# Função auxiliar para uso de requisições que requerem CSRF Token
+@ensure_csrf_cookie
+def csrf_token_view(request):
+    return JsonResponse({"detail": "CSRF cookie set"})
+
+# Função de login por email e senha: realiza verificação dos dados de login e, caso sucesso, retorna
+# os dados do usuário para o Front
 @csrf_exempt
 def login_view(request):
     data = processar_requisicao(request)
@@ -53,33 +61,37 @@ def login_view(request):
         }
     )
 
+# Realiza o cadastro de um usuário no banco de dados
 @csrf_exempt
 def cadastro_view(request):
     data = processar_requisicao(request)
-    data = cadastro(data)
+    return cadastro(data)
 
-    return data
-
+# Realiza o processo de cadastro de um agendamento no banco de dados
 @csrf_exempt
 def inserir_agendamento_view(request):
     data = processar_requisicao(request)
     return inserir_agendamento_logica(data)
 
+# Realiza o processo de remoção de um agendamento no banco de dados
 @csrf_exempt
 def remover_agendamento_view(request):
     data = processar_requisicao(request)
     return remover_agendamento_logica(data)
 
+# Realiza o processo de atualização de um agendamento no banco de dados
 @csrf_exempt
 def atualizar_agendamento_view(request):
     data = processar_requisicao(request)
     return atualiza_agendamento_logica(data)
 
+# Retorna todos os agendamentos de um cliente a partir de seu nome
 @csrf_exempt
 def listar_agendamentos_view(request):
     data = processar_requisicao(request)
     return lista_agendamentos_logica(data)
 
+# Realiza o processo de editar o perfil do usuário
 @csrf_exempt
 def editar_perfil_view(request, id):    
 
@@ -91,6 +103,7 @@ def editar_perfil_view(request, id):
         response = editar_perfil(data, id)    
         return response
 
+# Realiza o processo de cadastro de uma barbearia
 @csrf_exempt
 def cadastro_local_view(request,id):
     status, msg = verifica_local(id)
@@ -100,71 +113,72 @@ def cadastro_local_view(request,id):
          
     return JsonResponse({'status':False, 'msg': msg})
 
+# Realiza o processo de editar uma barbearia
 @csrf_exempt
 def editar_local_view(request,id):
     data = processar_requisicao(request)
     return editar_local(data,id)
 
+# Realiza o processo de deletar uma barbearia
 @csrf_exempt
 def delete_local_view(request,id):
     response = apagar_local(id)
     return response
 
+# Realiza o processo de cadastrar um novo serviço em uma barbearia
 @csrf_exempt
 def cadastro_servico_view(request, id):
     data = processar_requisicao(request)
     response = cadastrar_servico(data, id)
     return response
 
+# Realiza o cadastro do horário de funcionamento de uma barbearia
 @csrf_exempt
 def cadastrar_horario_view(request, id):
     data = processar_requisicao(request)
     response = cadastrar_horario(data, id)
     return response
 
+# Realiza o processo de recuperação de senha do usuário
 @csrf_exempt
 def forgot_pass_view(request):
-    
     email = processar_requisicao(request)
-    print(email)
-    response = recuperar_senha(email)
-    return response
+    email = email.get("email")
+    return recuperar_senha(email)
 
+# Retorna o local da barbearia de um dado agendamento
 @csrf_exempt
 def obtem_local_view(request):
     data = processar_requisicao(request)
     response = obter_local_agendamento_logica(data)
     return response
 
+# Retorna o proximo agendamento de um cliente e as informações sobre o local
 @csrf_exempt
 def prox_agend_view(request):
     data = processar_requisicao(request)
     response = obter_proximo_agendamento_e_local_logica(data)
     return response
 
+# Retorna todas as barbeairas do banco (A atualiazar)
 @csrf_exempt
 def local_barbeiro_view(request):
-
-    response = listar_locais_barbeiro_logica()
+    response = listar_todas_barbearias_logica()
     return response
 
+# Retorna os agendamentos futuro de um barbeiro
 @csrf_exempt
 def agenda_barbeiro_view(request):
     data = processar_requisicao(request)
     response = listar_agendamentos_barbeiro_logica(data)
     return response
 
+# Retorna todos os dados do usuário baseado no id passado
 @csrf_exempt
 def recuperar_dados_perfil_view(request,id):
-    response = recuperar_dados_perfil(id)
-    return response
+    return recuperar_dados_perfil(id)
 
-@csrf_exempt
-def recuperar_senha_view(request,id):
-    response = recuperar_senha(request, id)
-    return response
-
-
+# Realiza o login via API google
 @csrf_exempt
 def google_login(request):
     if request.method != "POST":
@@ -213,7 +227,36 @@ def google_login(request):
     except Exception as e:
         return JsonResponse({"success": False, "message": str(e)}, status=500)
     
+# Retorna todos os serviços cadastrados e seu local associado
+@csrf_exempt
+def listar_todos_servicos_view(request):
+    return listar_todos_servicos_logica()
 
-@ensure_csrf_cookie
-def csrf_token_view(request):
-    return JsonResponse({"detail": "CSRF cookie set"})
+# Retorna todos os horarios cadastrados e seu local associado
+@csrf_exempt
+def listar_todos_horarios_view(request):
+    return listar_todos_horarios_logica()
+
+# Cria intervalos para o barbeiro
+@csrf_exempt
+def criar_intervalo_view(request):
+    data = processar_requisicao(request)
+    return criar_intervalo_logica(data)
+
+# Realiza a edição dos dados de uma barbearia
+@csrf_exempt
+def editar_local_barbeiro_view(request):
+    data = processar_requisicao(request)
+    return editar_local_barbeiro_logica(data)
+
+# Realiza a edição dos dados de uma barbearia
+@csrf_exempt
+def editar_servico_barbeiro_view(request):
+    data = processar_requisicao(request)
+    return editar_servico_barbeiro_logica(data)
+
+# Realiza a exclusão de um serviço de um barbeiro
+@csrf_exempt
+def excluir_servico_barbeiro_view(request):
+    data = processar_requisicao(request)
+    return excluir_servico_barbeiro_logica(data)

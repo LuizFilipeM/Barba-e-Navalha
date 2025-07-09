@@ -23,8 +23,9 @@ export function Client() {
   useEffect(() => {
     async function fetchBarbearias() {
       try {
-        const response = await api.get("/barbershops/");
-        setBarbearias(response.data.data.locais);
+        const response = await api.get("/barbershops");
+        
+        setBarbearias(response.data);
         
         if (response.data.status === true) {
           console.log("Barbearias carregadas com sucesso!");
@@ -34,7 +35,7 @@ export function Client() {
         
       } catch (error) {
         console.error("Erro ao buscar barbearias:", error);
-        alert("Erro ao buscar barbearias. Tente novamente mais tarde.");
+        //alert("Erro ao buscar barbearias. Tente novamente mais tarde.");
         
       }}
     fetchBarbearias();

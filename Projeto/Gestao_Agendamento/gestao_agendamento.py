@@ -1,13 +1,13 @@
 # BACK-END GESTAO AGENDAMENTO
 
-# Barba_e_Navalha/gestao_agendamento.py
+
 from django.http import JsonResponse
-from Projeto.Login_Autenticacao.models import Barbeiro, Cliente, Local, Servicos, Agenda
-from .models import *
+from Projeto.Login_Autenticacao.models import *
 from .apiCalendar import criar_evento, deletar_evento_calendar, atualizar_evento_calendar, listar_eventos_calendar
 from .apiMaps import gerar_url_mapa_incorporado
 from django.db.models import Q
 import datetime
+import traceback
 
 def _check_overlap(start1, end1, start2, end2):
     """Verifica se dois intervalos de tempo [start1, end1) e [start2, end2) se sobrepõem."""
@@ -15,7 +15,7 @@ def _check_overlap(start1, end1, start2, end2):
 
 def inserir_agendamento_logica(data):
     try:
-        # --- Obtenção de dados da requisição ---
+        # 1. Obtenção e Validação dos Dados de Entrada
         cliente_nome_str = data.get('cliente')
         barbeiro_solicitado_nome_str = data.get('barbeiro')
         servico_id_str = data.get('servico')
@@ -23,101 +23,85 @@ def inserir_agendamento_logica(data):
         horario_str = data.get('horario')
 
         if not all([cliente_nome_str, barbeiro_solicitado_nome_str, servico_id_str, data_agendamento_str, horario_str]):
-            print(cliente_nome_str, barbeiro_solicitado_nome_str, servico_id_str, data_agendamento_str, horario_str)
-            return JsonResponse({'status':False, 'msg':"Dados incompletos para o agendamento."})
+            return False, "Dados incompletos para o agendamento."
 
-        # --- Buscando objetos no banco ---
+        # 2. Busca dos Objetos no Banco de Dados
         cliente = Cliente.objects.filter(nome=cliente_nome_str).first()
-        if not cliente:
-            return JsonResponse({'status':False, 'msg': "Cliente não encontrado."})
+        if not cliente: return False, f"Cliente '{cliente_nome_str}' não encontrado."
             
         barbeiro_solicitado = Barbeiro.objects.filter(nome=barbeiro_solicitado_nome_str).first()
-        if not barbeiro_solicitado:
-            return JsonResponse({'status':False, 'msg': f"Barbeiro '{barbeiro_solicitado_nome_str}' não encontrado."})
+        if not barbeiro_solicitado: return False, f"Barbeiro '{barbeiro_solicitado_nome_str}' não encontrado."
 
         local_do_barbeiro = Local.objects.filter(barbeirousuarioid=barbeiro_solicitado).first()
-        if not local_do_barbeiro:
-            return JsonResponse({'status':False, 'msg': f"O barbeiro {barbeiro_solicitado.nome} não está associado a nenhum local de trabalho."})
+        if not local_do_barbeiro: return False, f"O barbeiro {barbeiro_solicitado.nome} não está associado a nenhum local."
 
         try:
-            servico_id = int(servico_id_str)
-            novo_servico = Servicos.objects.get(id=servico_id, idlocal=local_do_barbeiro)
-            if novo_servico.tempo is None or novo_servico.tempo <= 0:
-                return JsonResponse({'status':False, 'msg': f"O serviço '{novo_servico.nome}' não possui uma duração válida cadastrada."})
-            duracao_novo_servico_min = novo_servico.tempo
+            novo_servico = Servicos.objects.get(id=int(servico_id_str), idlocal=local_do_barbeiro)
+            if novo_servico.duracao is None or novo_servico.duracao <= 0:
+                return False, f"O serviço '{novo_servico.nome}' não possui uma duração válida."
+            duracao_novo_servico_min = novo_servico.duracao
         except Servicos.DoesNotExist:
-            return JsonResponse({'status':False, 'msg': f"Serviço não encontrado ou não oferecido no local '{local_do_barbeiro.nome_local}'."})
+            return False, f"Serviço não encontrado ou não oferecido no local '{local_do_barbeiro.nome_local}'."
         except (ValueError, TypeError):
-            return JsonResponse({'status':False, 'msg': "ID do serviço inválido."})
+            return False, "ID do serviço inválido."
 
-        # --- Preparação dos horários do NOVO agendamento ---
+        # 3. Preparação dos Horários
         try:
             data_obj = datetime.datetime.strptime(data_agendamento_str, "%Y-%m-%d").date()
             hora_obj = datetime.datetime.strptime(horario_str, "%H:%M").time()
         except ValueError:
-            return JsonResponse({'status':False, 'msg': "Formato de data ou hora inválido. Use YYYY-MM-DD e HH:MM."})
+            return False, "Formato de data ou hora inválido. Use YYYY-MM-DD e HH:MM."
 
         novo_agendamento_inicio_dt = datetime.datetime.combine(data_obj, hora_obj)
         novo_agendamento_fim_dt = novo_agendamento_inicio_dt + datetime.timedelta(minutes=duracao_novo_servico_min)
-        print(f"DEBUG: Tentando agendar de {novo_agendamento_inicio_dt} até {novo_agendamento_fim_dt}")
 
-        # --- INÍCIO DA VERIFICAÇÃO DE CONFLITOS CORRIGIDA ---
-
-        # 1. VERIFICAÇÃO DE CONFLITO PARA O BARBEIRO
+        # 4. Verificação de Conflitos
+        # Conflito para o Barbeiro
         agendamentos_barbeiro_no_dia = Agenda.objects.filter(idbarbeiro=barbeiro_solicitado, data=data_obj).select_related('idservicos')
         for ag_existente in agendamentos_barbeiro_no_dia:
-            if ag_existente.idservicos and ag_existente.idservicos.tempo:
+            if ag_existente.idservicos and ag_existente.idservicos.duracao:
                 existente_inicio_dt = datetime.datetime.combine(ag_existente.data, ag_existente.hora)
-                existente_fim_dt = existente_inicio_dt + datetime.timedelta(minutes=ag_existente.idservicos.tempo)
-                
-                print(f"DEBUG Barbeiro: Verificando conflito com agendamento existente ID {ag_existente.id} das {existente_inicio_dt} às {existente_fim_dt}")
+                existente_fim_dt = existente_inicio_dt + datetime.timedelta(minutes=ag_existente.idservicos.duracao)
                 if _check_overlap(novo_agendamento_inicio_dt, novo_agendamento_fim_dt, existente_inicio_dt, existente_fim_dt):
-                    # Lógica de sugestão de outros barbeiros...
-                    # ... (esta parte já estava correta, então a omiti para focar na correção do bug)
-                    return JsonResponse({'status':False, 'msg': f"O barbeiro {barbeiro_solicitado.nome} já possui um agendamento conflitante neste horário."})
+                    # Se houver conflito, retorna a mensagem de erro detalhada e para a execução.
+                    return False, f"O barbeiro {barbeiro_solicitado.nome} já possui um agendamento conflitante das {existente_inicio_dt.strftime('%H:%M')} às {existente_fim_dt.strftime('%H:%M')}."
 
-        # 2. VERIFICAÇÃO DE CONFLITO PARA O CLIENTE
+        # Conflito para o Cliente
         agendamentos_cliente_no_dia = Agenda.objects.filter(idcliente=cliente, data=data_obj).select_related('idservicos')
-        print(f"DEBUG Cliente: Encontrados {agendamentos_cliente_no_dia.count()} agendamentos para o cliente {cliente.nome} no dia {data_obj}")
-        
         for ag_existente in agendamentos_cliente_no_dia:
-            if ag_existente.idservicos and ag_existente.idservicos.tempo:
+            if ag_existente.idservicos and ag_existente.idservicos.duracao:
                 existente_inicio_dt = datetime.datetime.combine(ag_existente.data, ag_existente.hora)
-                existente_fim_dt = existente_inicio_dt + datetime.timedelta(minutes=ag_existente.idservicos.tempo)
-                
-                print(f"DEBUG Cliente: Verificando conflito com agendamento existente ID {ag_existente.id} das {existente_inicio_dt} às {existente_fim_dt}")
+                existente_fim_dt = existente_inicio_dt + datetime.timedelta(minutes=ag_existente.idservicos.duracao)
                 if _check_overlap(novo_agendamento_inicio_dt, novo_agendamento_fim_dt, existente_inicio_dt, existente_fim_dt):
-                    return JsonResponse({'status':False, 'msg':f"Você (cliente {cliente.nome}) já possui um agendamento conflitante neste horário ({existente_inicio_dt.strftime('%H:%M')} às {existente_fim_dt.strftime('%H:%M')})."})
+                    return False, f"Você (cliente {cliente.nome}) já possui um agendamento conflitante neste horário."
 
-        # --- FIM DA VERIFICAÇÃO DE CONFLITOS ---
-
-        # Se não houver conflitos, prosseguir com a criação
-        success_calendar, event_id_calendar, msg_calendar_or_link = criar_evento(
+        # 5. Se todas as validações passaram, cria o evento e o agendamento
+        success_calendar, event_id_calendar, msg_calendar = criar_evento(
             novo_servico.nome, cliente.nome, barbeiro_solicitado.nome,
             data_agendamento_str, horario_str, duracao_novo_servico_min,
             local_do_barbeiro.endereco, local_do_barbeiro.nome_local
         )
-        
-        if not success_calendar:
-            return JsonResponse({'status':False,'msg': f"Falha ao criar evento no Google Calendar: {msg_calendar_or_link}"})
 
-        novo_agendamento_db = Agenda.objects.create(
+        if not success_calendar:
+            return False, f"Falha ao criar evento no Google Calendar: {msg_calendar}"
+
+        Agenda.objects.create(
             data=data_obj, hora=hora_obj, idbarbeiro=barbeiro_solicitado,
             idcliente=cliente, idservicos=novo_servico,
             google_calendar_event_id=event_id_calendar
         )
-        return JsonResponse({'status':True, 'msg': "Agendamento criado com sucesso no sistema e no Google Calendar."})
+        return True, "Agendamento criado com sucesso."
 
     except Exception as e:
-        import traceback
         traceback.print_exc()
-        return JsonResponse({'status':False, 'msg': f"Erro inesperado ao inserir agendamento: {str(e)}"})
+        return False, f"Erro inesperado ao inserir agendamento: {str(e)}"
+
 
 def remover_agendamento_logica(data):
     try:
         agendamento_id_app = data.get('agendamento_id')
         if not agendamento_id_app:
-            return JsonResponse({"status":False, "msg": "ID do agendamento não fornecido."})
+            return False, "ID do agendamento não fornecido."
 
         agendamento = Agenda.objects.get(id=agendamento_id_app)
         google_event_id = agendamento.google_calendar_event_id
@@ -131,18 +115,18 @@ def remover_agendamento_logica(data):
 
         # Remove o agendamento do banco de dados local
         agendamento.delete()
-        return JsonResponse({"status":True, "msg": "Agendamento removido com sucesso do sistema."})
+        return True, "Agendamento removido com sucesso do sistema."
 
     except Agenda.DoesNotExist:
-        return JsonResponse({"status":False, "msg": "Agendamento não encontrado no sistema."})
+        return False, "Agendamento não encontrado no sistema."
     except Exception as e:
-        return JsonResponse({"status":False, "msg": str(e)})
+        return False, str(e)
 
 def atualiza_agendamento_logica(data):
     try:
         agendamento_id = data.get('agendamento_id')
         if not agendamento_id:
-            return JsonResponse({"status":False, "msg": "ID do agendamento não fornecido para atualização."})
+            return False, "ID do agendamento não fornecido."
 
         agendamento = Agenda.objects.select_related('idcliente', 'idbarbeiro', 'idservicos').get(id=agendamento_id)
         
@@ -154,81 +138,72 @@ def atualiza_agendamento_logica(data):
             agendamento.hora = data['hora']
             updated_fields_local = True
         
-        # Se um novo serviço for enviado, valida se ele pertence ao local do barbeiro
         if data.get('servico'):
             local_do_barbeiro = Local.objects.filter(barbeirousuarioid=agendamento.idbarbeiro).first()
             if not local_do_barbeiro:
-                 return JsonResponse({"status":False, "msg": "Não foi possível validar o serviço pois o barbeiro não possui um local de trabalho."})
+                return False, "Barbeiro do agendamento não possui um local de trabalho."
             try:
                 novo_servico_id = int(data['servico'])
                 if agendamento.idservicos_id != novo_servico_id:
-                    # Busca o novo serviço garantindo que ele pertence ao local correto
                     novo_servico_obj = Servicos.objects.get(id=novo_servico_id, idlocal=local_do_barbeiro)
                     agendamento.idservicos = novo_servico_obj
                     updated_fields_local = True
             except Servicos.DoesNotExist:
-                return JsonResponse({"status":False, "msg": f"Novo serviço não encontrado ou não oferecido no local '{local_do_barbeiro.nome_local}'."})
+                return False, f"Novo serviço não encontrado ou não oferecido no local."
             except (ValueError, TypeError):
-                return JsonResponse({"status":False, "msg": "ID do novo serviço inválido."})
+                return False, "ID do novo serviço inválido."
 
-        # Salva as alterações no banco de dados se houver alguma
         if updated_fields_local:
             agendamento.save()
-            msg_local = "Agendamento atualizado com sucesso no sistema."
+            msg_local = "Agendamento atualizado com sucesso."
         else:
-            msg_local = "Nenhum dado foi alterado no sistema."
+            msg_local = "Nenhum dado foi alterado."
             
-        # CORREÇÃO: A lógica de sincronização do calendário agora é executada se houver um evento para sincronizar.
         if agendamento.google_calendar_event_id:
-            barbeiro_do_agendamento = agendamento.idbarbeiro
-            local_do_barbeiro = Local.objects.filter(barbeirousuarioid=barbeiro_do_agendamento).first()
-            
+            local_do_barbeiro = Local.objects.filter(barbeirousuarioid=agendamento.idbarbeiro).first()
             if not local_do_barbeiro:
-                return JsonResponse({"status":True, "msg": f"{msg_local} (Aviso: não foi possível sincronizar o calendário pois o barbeiro não tem um local definido)."})
+                return True, f"{msg_local} (Aviso: calendário não sincronizado, barbeiro sem local)."
 
-            # Prepara todos os dados do agendamento (já atualizados) para a API
-            nome_servico_atualizado = agendamento.idservicos.nome
-            duracao_atualizada = agendamento.idservicos.tempo
             data_str_calendar = agendamento.data.strftime('%Y-%m-%d') if isinstance(agendamento.data, datetime.date) else str(agendamento.data)
             hora_str_calendar = agendamento.hora.strftime('%H:%M') if isinstance(agendamento.hora, datetime.time) else str(agendamento.hora)
 
             success_calendar, msg_calendar = atualizar_evento_calendar(
                 event_id=agendamento.google_calendar_event_id,
-                novo_servico_nome=nome_servico_atualizado,
+                # Os outros parâmetros para atualizar o evento no calendar
+                barbeiro_id = agendamento.idbarbeiro.id, # Se você implementou o token por usuário
+                novo_servico_nome=agendamento.idservicos.nome,
                 nome_cliente=agendamento.idcliente.nome,
-                nome_barbeiro=barbeiro_do_agendamento.nome,
+                nome_barbeiro=agendamento.idbarbeiro.nome,
                 nova_data_str=data_str_calendar,
                 nova_hora_str=hora_str_calendar,
-                duracao_minutos=duracao_atualizada,
+                duracao_minutos=agendamento.idservicos.duracao,
                 local_endereco=local_do_barbeiro.endereco,
                 local_nome=local_do_barbeiro.nome_local
             )
             
             if success_calendar:
-                return JsonResponse({"status":True, "msg": f"{msg_local} E o evento no Google Calendar foi sincronizado."})
+                return True, f"{msg_local} Evento no Google Calendar também foi atualizado."
             else:
-                return JsonResponse({"status":True, "msg": f"{msg_local} (Aviso: falha ao sincronizar o evento no Google Calendar: {msg_calendar})."})
-
-        # Se não houve alterações e não há evento no Google Calendar, apenas retorna a mensagem local.
-        return JsonResponse({"status":True, "msg": msg_local})
+                return True, f"{msg_local} (Aviso: falha ao atualizar no Google Calendar: {msg_calendar})."
+        
+        return True, msg_local
 
     except Agenda.DoesNotExist:
-        return JsonResponse({"status":False, "msg": "Agendamento não encontrado."})
+        return False, "Agendamento não encontrado."
     except Exception as e:
-        import traceback
         traceback.print_exc()
-        return JsonResponse({"status":False, "msg": f"Erro inesperado ao atualizar agendamento: {str(e)}"})
+        return False, f"Erro inesperado: {str(e)}"
 
 def lista_agendamentos_logica(data):
     try:
         nome_cliente = data.get('cliente')
         if not nome_cliente:
-            return JsonResponse({"status":False, "msg": "Nome do cliente não fornecido"})
+            return False, "Nome do cliente não fornecido"
 
         cliente = Cliente.objects.filter(nome=nome_cliente).first()
         if not cliente:
-            return JsonResponse({"status":False, "msg": "Cliente não encontrado."})
-
+            return False, "Cliente não encontrado."
+        
         # Obter data e hora atuais
         agora = datetime.datetime.now()
         data_atual = agora.date()
@@ -240,7 +215,7 @@ def lista_agendamentos_logica(data):
         # A lógica de sincronização com o Calendar continua a mesma
         success_calendar, eventos_do_calendar = listar_eventos_calendar()
         if not success_calendar:
-            return JsonResponse({"status":False, "msg":eventos_do_calendar})
+            return False, eventos_do_calendar
             
         ids_no_calendario = {evento['id'] for evento in eventos_do_calendar}
 
@@ -269,12 +244,12 @@ def lista_agendamentos_logica(data):
             
             resultado_final.append(ag_data)
 
-        return JsonResponse({"status":True, "data": resultado_final})
+        return True, resultado_final
 
     except Exception as e:
         # ... (seu tratamento de erro)
-        return JsonResponse({"status":False, "msg": f"Erro inesperado ao listar agendamentos: {str(e)}"})
-
+        return False, f"Erro inesperado ao listar agendamentos: {str(e)}"
+    
 def obter_local_agendamento_logica(data):
     """
     Encontra o local de trabalho do barbeiro para um agendamento específico
@@ -283,14 +258,14 @@ def obter_local_agendamento_logica(data):
     try:
         agendamento_id = data.get('agendamento_id')
         if not agendamento_id:
-            return JsonResponse({"status":False, "msg": "ID do agendamento não fornecido."})
+            return False, "ID do agendamento não fornecido."
 
         # Busca o agendamento e o barbeiro relacionado
         agendamento = Agenda.objects.select_related('idbarbeiro').get(id=agendamento_id)
         barbeiro = agendamento.idbarbeiro
 
         if not barbeiro:
-            return JsonResponse({"status":False, "msg": "Agendamento não está associado a nenhum barbeiro."})
+            return False, "Agendamento não está associado a nenhum barbeiro."
 
         # Com base no modelo, um barbeiro pode estar em vários locais.
         # Esta lógica pega o primeiro local encontrado associado ao barbeiro.
@@ -298,10 +273,11 @@ def obter_local_agendamento_logica(data):
         local_obj = Local.objects.filter(barbeirousuarioid=barbeiro).first()
 
         if not local_obj:
-            return JsonResponse({"status":False, "msg": f"Nenhum local de trabalho encontrado para o barbeiro '{barbeiro.nome}'."})
+            return False, f"Nenhum local de trabalho encontrado para o barbeiro '{barbeiro.nome}'."
 
         # Monta a query para o mapa com nome e endereço do local
-        query_mapa = f"{local_obj.nome_local}, {local_obj.endereco}"
+        # query_mapa = f"{local_obj.nome_local}, {local_obj.endereco}"
+        query_mapa = f"{local_obj.endereco}"
         map_url = gerar_url_mapa_incorporado(query_mapa)
 
         resultado = {
@@ -311,22 +287,22 @@ def obter_local_agendamento_logica(data):
             "endereco": local_obj.endereco,
             "map_url": map_url
         }
-        return JsonResponse({"status":True, "data": resultado})
+        return True, resultado
 
     except Agenda.DoesNotExist:
-        return JsonResponse({"status":False, "msg": "Agendamento não encontrado."})
+        return False, "Agendamento não encontrado."
     except Exception as e:
-        return JsonResponse({"status":False, "msg": f"Erro inesperado: {str(e)}"})
+        return False, f"Erro inesperado: {str(e)}"
 
 def obter_proximo_agendamento_e_local_logica(data):
     try:
         cliente_nome = data.get('cliente_nome')
         if not cliente_nome:
-            return JsonResponse({"status":False, "msg": "Nome do cliente não fornecido."})
-
+            return False, "Nome do cliente não fornecido."
+            
         cliente = Cliente.objects.filter(nome=cliente_nome).first()
         if not cliente:
-            return JsonResponse({"status":False, "msg": "Cliente não encontrado."})
+            return False, "Cliente não encontrado."
 
         # Obter data e hora atuais
         agora = datetime.datetime.now()
@@ -347,16 +323,15 @@ def obter_proximo_agendamento_e_local_logica(data):
         ).select_related('idbarbeiro', 'idservicos').order_by('data', 'hora').first()
 
         if not proximo_agendamento:
-            return JsonResponse({"status":False, "msg": "Nenhum agendamento encontrado para os próximos 3 dias."})
+            return False, "Nenhum agendamento encontrado para os próximos 3 dias."
 
         # O restante da lógica para obter local e mapa continua igual
         barbeiro = proximo_agendamento.idbarbeiro
-        # ... (código existente para encontrar local e gerar map_url)
-        # ...
+       
 
         local_obj = Local.objects.filter(barbeirousuarioid=barbeiro).first()
         if not local_obj:
-            return JsonResponse({"status":False, "msg": "Nenhum local de trabalho encontrado para o barbeiro do próximo agendamento."})
+            return False, "Nenhum local de trabalho encontrado para o barbeiro do próximo agendamento."
 
         query_mapa = f"{local_obj.nome_local}, {local_obj.endereco}"
         map_url = gerar_url_mapa_incorporado(query_mapa)
@@ -375,39 +350,36 @@ def obter_proximo_agendamento_e_local_logica(data):
                 "map_url": map_url
             }
         }
-        return JsonResponse({"status":True, "data": resultado})
+        return True, resultado
 
     except Exception as e:
-        # ... (seu tratamento de erro)
-        return JsonResponse({"status":False, "msg": f"Erro inesperado: {str(e)}"})
+        return False, f"Erro inesperado: {str(e)}"
 
-def listar_locais_barbeiro_logica():
+def listar_locais_barbeiro_logica(data):
     """
     Lista TODOS os locais onde um barbeiro atua e gera um mapa para cada um.
     """
-    print("DEBUG: Iniciando a listagem de locais do barbeiro...")
     try:
-        #barbeiro_nome = 'barbeiro'
+        barbeiro_nome = data.get('barbeiro_nome')
+        if not barbeiro_nome:
+            return False, "Nome do barbeiro não fornecido."
         
-        #if not barbeiro_nome:
-        #    return JsonResponse({"status":False, "msg": "Nome do barbeiro não fornecido."})
-
         # Usamos .get() que garante que apenas um barbeiro com esse nome seja encontrado.
         # Se houver nomes duplicados, um erro será lançado, o que é um bom controle.
-        #barbeiro = Barbeiro.objects.get(nome=barbeiro_nome)
+        barbeiro = Barbeiro.objects.get(nome=barbeiro_nome)
         
         # CORREÇÃO PRINCIPAL AQUI:
         # Usamos .filter() para buscar TODOS os locais associados a este barbeiro.
-        locais_do_barbeiro = Local.objects.all()
-        #print(f"DEBUG: Encontrados {locais_do_barbeiro.count()} locais para o barbeiro {barbeiro.nome}.")
+        locais_do_barbeiro = Local.objects.filter(barbeirousuarioid=barbeiro)
 
         if not locais_do_barbeiro.exists():
-            return JsonResponse({"status":False, "msg": "Nenhum local de trabalho encontrado."})
+            return False, f"Nenhum local de trabalho encontrado para o barbeiro {barbeiro.nome}."
 
         # Itera sobre CADA local encontrado para construir a lista de resultados.
         locais_com_mapa = []
         for local_obj in locais_do_barbeiro:
-            query_mapa = f"{local_obj.nome_local}, {local_obj.endereco}"
+            # query_mapa = f"{local_obj.nome_local}, {local_obj.endereco}" # Tem que ser nome e local real
+            query_mapa = f"{local_obj.endereco}"
             map_url = gerar_url_mapa_incorporado(query_mapa)
             locais_com_mapa.append({
                 "local_nome": local_obj.nome_local,
@@ -416,18 +388,18 @@ def listar_locais_barbeiro_logica():
             })
             
         resultado = {
-            #"barbeiro_nome": barbeiro.nome,
+            "barbeiro_nome": barbeiro.nome,
             "locais": locais_com_mapa # A lista agora contém todos os locais
         }
-        return JsonResponse({"status":True, "data": resultado})
+        return True, resultado
 
-    #except Barbeiro.DoesNotExist:
-    #    return JsonResponse({"status":False, "msg": f"Barbeiro com o nome '{barbeiro_nome}' não encontrado."})
-    #except Barbeiro.MultipleObjectsReturned:
-    #    return JsonResponse({"status":False, "msg": f"Existe mais de um barbeiro com o nome '{barbeiro_nome}'. Use um identificador único."})
+    except Barbeiro.DoesNotExist:
+        return False, f"Barbeiro com o nome '{barbeiro_nome}' não encontrado."
+    except Barbeiro.MultipleObjectsReturned:
+        return False, f"Existe mais de um barbeiro com o nome '{barbeiro_nome}'. Use um identificador único."
     except Exception as e:
-        return JsonResponse({"status":False, "msg": f"Erro inesperado: {str(e)}"})
-
+        return False, f"Erro inesperado: {str(e)}"
+    
 def listar_agendamentos_barbeiro_logica(data):
     """
     Lista todos os agendamentos FUTUROS de um barbeiro específico,
@@ -436,8 +408,8 @@ def listar_agendamentos_barbeiro_logica(data):
     try:
         barbeiro_id = data.get('barbeiro_id')
         if not barbeiro_id:
-            return JsonResponse({"status":False, "msg": "ID do barbeiro não fornecido."})
-
+            return False, "ID do barbeiro não fornecido."
+            
         barbeiro = Barbeiro.objects.get(id=barbeiro_id)
         
         agora = datetime.datetime.now()
@@ -465,14 +437,308 @@ def listar_agendamentos_barbeiro_logica(data):
                 'hora': ag.hora.strftime('%H:%M'),
                 'cliente_nome': ag.idcliente.nome if ag.idcliente else 'N/A',
                 'servico_nome': ag.idservicos.nome if ag.idservicos else 'N/A',
-                'servico_duracao': ag.idservicos.tempo if ag.idservicos else 'N/A',
+                'servico_duracao': ag.idservicos.duracao if ag.idservicos else 'N/A',
             })
 
-        return JsonResponse({"status":True, "data": resultado})
+        return JsonResponse({"status": True, "data": resultado})
 
     except Barbeiro.DoesNotExist:
-        return JsonResponse({"status":False, "msg": f"Barbeiro com ID '{barbeiro_id}' não encontrado."})
+        return JsonResponse({"status": False, "msg": f"Barbeiro com ID '{barbeiro_id}' não encontrado."})
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return JsonResponse({"status":False, "msg": f"Erro inesperado: {str(e)}"})
+        return JsonResponse({"status": False, "msg": f"Erro inesperado: {str(e)}"})
+    
+def listar_todas_barbearias_logica():
+    """
+    Busca e lista todas as barbearias (Locais) cadastradas no banco de dados.
+    
+    """
+    try:
+        # Usa .all() para buscar todos os objetos do modelo Local
+        todas_as_barbearias = Local.objects.all().order_by('nome_local')
+        if not todas_as_barbearias.exists():
+            return True, [] # Retorna sucesso com uma lista vazia se não houver barbearias
+
+        resultado = []
+        for local in todas_as_barbearias:
+            resultado.append({
+                'id': local.id,
+                'nome_local': local.nome_local,
+                'endereco': local.endereco,
+                'telefone': local.telefone,
+                'cnpj': local.cnpj # Adicionado CNPJ se for útil
+            })
+        return JsonResponse({"status": True, "data": resultado})
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({"status": False, "message": f"Erro inesperado ao listar as barbearias: {str(e)}"})
+
+def listar_todos_servicos_logica():
+    """
+    Busca e lista todos os serviços cadastrados, incluindo a qual local pertencem.
+    """
+    try:
+        # Usamos .select_related('idlocal') para otimizar a busca, trazendo
+        # os dados do Local relacionado na mesma consulta.
+        todos_os_servicos = Servicos.objects.select_related('idlocal').all().order_by('nome')
+        
+        if not todos_os_servicos.exists():
+            return True, []
+
+        resultado = []
+        for servico in todos_os_servicos:
+            resultado.append({
+                'id': servico.id,
+                'nome': servico.nome,
+                'descricao': servico.descricao,
+                'preco': f"{servico.preco:.2f}" if servico.preco is not None else "N/A",
+                'duracao': servico.duracao,
+                'local_id': servico.idlocal.id if servico.idlocal else None,
+                'local_nome': servico.idlocal.nome_local if servico.idlocal else "Sem local associado"
+            })
+
+        return JsonResponse({"status": True, "data": resultado})
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({"status": False, "msg": f"Erro inesperado ao listar os serviços: {str(e)}"})
+    
+def listar_todos_horarios_logica():
+    """
+    Busca e lista todos os horários de funcionamento cadastrados,
+    indicando a qual Local cada horário pertence.
+    """
+    try:
+        # Usamos .select_related('idlocal') para otimizar a busca,
+        # trazendo os dados do Local na mesma consulta ao banco.
+        # Ordenamos por nome do local e depois pelo dia da semana.
+        todos_os_horarios = Horarios.objects.select_related('idlocal').all().order_by('idlocal__nome_local', 'dia_semana')
+        
+        if not todos_os_horarios.exists():
+            return True, [] # Retorna sucesso com uma lista vazia se não houver horários
+
+        resultado = []
+        for horario in todos_os_horarios:
+            resultado.append({
+                'id_horario': horario.id,
+                'dia_semana': horario.dia_semana,
+                'hora_inicio': horario.hora_inicio.strftime('%H:%M') if horario.hora_inicio else 'N/A',
+                'hora_fim': horario.hora_fim.strftime('%H:%M') if horario.hora_fim else 'N/A',
+                'local_nome': horario.idlocal.nome_local if horario.idlocal else "Sem local associado"
+            })
+
+        return True, resultado
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return False, f"Erro inesperado ao listar os horários: {str(e)}"
+
+def criar_intervalo_logica(data):
+    """
+    Cria um agendamento especial para o barbeiro que funciona como um intervalo.
+    """
+    try:
+        barbeiro_id = data.get('barbeiro_id')
+        data_intervalo_str = data.get('data')
+        horario_inicio_str = data.get('horario')
+        duracao_minutos = data.get('duracao_minutos')
+
+        if not all([barbeiro_id, data_intervalo_str, horario_inicio_str, duracao_minutos]):
+            return JsonResponse({"status": False, "msg": "Dados incompletos para criar o intervalo."})
+
+        barbeiro = Barbeiro.objects.get(id=barbeiro_id)
+        
+        # Vamos usar um serviço "dummy" chamado "Intervalo" para registrar o bloqueio.
+        # Certifique-se de que este serviço existe no seu banco de dados.
+        servico_intervalo, created = Servicos.objects.get_or_create(
+            nome="Intervalo", 
+            defaults={'descricao': 'Bloqueio de tempo', 'preco': 0, 'duracao': 1}
+        )
+
+        # A lógica de verificação de conflitos é a mesma da criação de agendamento
+        data_obj = datetime.datetime.strptime(data_intervalo_str, "%Y-%m-%d").date()
+        hora_obj = datetime.datetime.strptime(horario_inicio_str, "%H:%M").time()
+        intervalo_inicio_dt = datetime.datetime.combine(data_obj, hora_obj)
+        intervalo_fim_dt = intervalo_inicio_dt + datetime.timedelta(minutes=int(duracao_minutos))
+
+        agendamentos_existentes = Agenda.objects.filter(idbarbeiro=barbeiro, data=data_obj)
+        for ag_existente in agendamentos_existentes:
+            if ag_existente.idservicos and ag_existente.idservicos.duracao:
+                existente_inicio_dt = datetime.datetime.combine(ag_existente.data, ag_existente.hora)
+                existente_fim_dt = existente_inicio_dt + datetime.timedelta(minutes=ag_existente.idservicos.duracao)
+                if _check_overlap(intervalo_inicio_dt, intervalo_fim_dt, existente_inicio_dt, existente_fim_dt):
+                    return JsonResponse({"status": False, "msg": "Você já possui um agendamento de cliente neste horário."})
+
+        # Cria o "agendamento" de intervalo, sem cliente associado (idcliente=None)
+        # e com o serviço de intervalo.
+        # A duração do serviço será usada para fins de checagem de conflito.
+        servico_intervalo.duracao = duracao_minutos
+        servico_intervalo.save()
+
+        novo_intervalo = Agenda.objects.create(
+            data=data_obj,
+            hora=hora_obj,
+            idbarbeiro=barbeiro,
+            idcliente=None, # Sem cliente
+            idservicos=servico_intervalo
+        )
+
+        return JsonResponse({"status": True, "msg": f"Intervalo das {horario_inicio_str} às {intervalo_fim_dt.strftime('%H:%M')} criado com sucesso."})
+
+    except Barbeiro.DoesNotExist:
+        return JsonResponse({"status": False, "msg": "Barbeiro não encontrado."})
+    except Exception as e:
+        traceback.print_exc()
+        return JsonResponse({"status": False, "msg": f"Erro inesperado ao criar intervalo: {str(e)}"})
+
+
+def editar_servico_barbeiro_logica(data):
+    """
+    Permite que um barbeiro edite os detalhes de um local de trabalho
+    que está associado a ele.
+    """
+    try:
+        barbeiro_id = data.get('barbeiro_id')
+        local_id = data.get('local_id')
+
+        if not barbeiro_id or not local_id:
+            return JsonResponse({"status": False, "msg": "ID do barbeiro e do local são obrigatórios."})
+
+        # 1. Busca o local que se deseja editar
+        local_a_editar = Local.objects.get(id=local_id)
+
+        # 2. VALIDAÇÃO DE SEGURANÇA: Verifica se o local pertence ao barbeiro que fez a requisição
+        #    O campo 'barbeirousuarioid' no modelo Local é uma ForeignKey para Barbeiro.
+        #    O Django armazena o ID do objeto relacionado em um campo com sufixo '_id'.
+        if local_a_editar.barbeirousuarioid_id != int(barbeiro_id):
+            return JsonResponse({"status": False, "msg": "Permissão negada. Você só pode editar seus próprios locais de trabalho."})
+
+        # 3. Atualiza os campos se eles foram fornecidos na requisição
+        updated = False
+        if 'nome_local' in data:
+            local_a_editar.nome_local = data['nome_local']
+            updated = True
+        if 'endereco' in data:
+            local_a_editar.endereco = data['endereco']
+            updated = True
+        if 'telefone' in data:
+            local_a_editar.telefone = data['telefone']
+            updated = True
+        
+        if updated:
+            local_a_editar.save()
+            return JsonResponse({"status":True, "msg": f"Local '{local_a_editar.nome_local}' atualizado com sucesso."})
+        else:
+            return JsonResponse({"status":False, "msg": "Nenhum dado novo foi fornecido para atualização."}) 
+
+    except Local.DoesNotExist:
+        return JsonResponse({"status": False, "msg": "Local com o ID fornecido não foi encontrado."})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({"status": False, "msg": f"Erro inesperado ao editar o local: {str(e)}"})
+
+
+
+##############################################################################################################
+#                                                                                                            #
+# ---------------------------------------- ADICIONAR AO CONTROLLER ------------------------------------------#
+#                                                                                                            #
+##############################################################################################################
+
+
+
+def excluir_servico_barbeiro_logica(data):
+    """
+    Permite que um barbeiro exclua um serviço, desde que não haja
+    agendamentos futuros para ele.
+    """
+    try:
+        barbeiro_id = data.get('barbeiro_id')
+        servico_id = data.get('servico_id')
+
+        if not barbeiro_id or not servico_id:
+            return False, "ID do barbeiro e do serviço são obrigatórios."
+
+        servico_a_excluir = Servicos.objects.select_related('idlocal__barbeirousuarioid').get(id=servico_id)
+
+        # VALIDAÇÃO DE SEGURANÇA: Mesma validação da função de editar
+        if servico_a_excluir.idlocal.barbeirousuarioid_id != int(barbeiro_id):
+            return False, "Permissão negada. Você não pode excluir um serviço que não pertence a um de seus locais."
+
+        # VALIDAÇÃO DE INTEGRIDADE: Verifica se o serviço está em uso em agendamentos futuros
+        agendamentos_futuros = Agenda.objects.filter(
+            idservicos=servico_a_excluir,
+            data__gte=datetime.date.today()
+        ).exists()
+
+        if agendamentos_futuros:
+            return False, "Não é possível excluir este serviço, pois ele já está agendado para clientes no futuro. Cancele os agendamentos primeiro."
+        
+        nome_servico_excluido = servico_a_excluir.nome
+        servico_a_excluir.delete()
+        
+        return True, f"Serviço '{nome_servico_excluido}' excluído com sucesso."
+
+    except Servicos.DoesNotExist:
+        return False, "Serviço com o ID fornecido não foi encontrado."
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return False, f"Erro inesperado ao excluir o serviço: {str(e)}"
+    
+
+##################  FUNÇÃO SIMILAR À editar_local (LOGIN_AUTENTICACAO) ##################
+
+def editar_local_barbeiro_logica(data):
+    """
+    Permite que um barbeiro edite os detalhes de um serviço oferecido
+    em um de seus locais de trabalho.
+    """
+    try:
+        barbeiro_id = data.get('barbeiro_id')
+        servico_id = data.get('servico_id')
+
+        if not barbeiro_id or not servico_id:
+            return False, "ID do barbeiro e do serviço são obrigatórios."
+
+        # Busca o serviço e pré-carrega o local e o barbeiro associado para a validação
+        servico_a_editar = Servicos.objects.select_related('idlocal__barbeirousuarioid').get(id=servico_id)
+
+        # VALIDAÇÃO DE SEGURANÇA: Garante que o serviço pertence a um local deste barbeiro
+        if servico_a_editar.idlocal.barbeirousuarioid_id != int(barbeiro_id):
+            return False, "Permissão negada. Você não pode editar um serviço que não pertence a um de seus locais."
+
+        # Atualiza os campos que foram enviados na requisição
+        updated = False
+        if 'nome' in data:
+            servico_a_editar.nome = data['nome']
+            updated = True
+        if 'descricao' in data:
+            servico_a_editar.descricao = data['descricao']
+            updated = True
+        if 'preco' in data:
+            servico_a_editar.preco = data['preco']
+            updated = True
+        if 'duracao' in data:
+            servico_a_editar.duracao = data['duracao']
+            updated = True
+        
+        if updated:
+            servico_a_editar.save()
+            return True, f"Serviço '{servico_a_editar.nome}' atualizado com sucesso."
+        else:
+            return True, "Nenhum dado novo foi fornecido para atualização."
+
+    except Servicos.DoesNotExist:
+        return False, "Serviço com o ID fornecido não foi encontrado."
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return False, f"Erro inesperado ao editar o serviço: {str(e)}"
+    
