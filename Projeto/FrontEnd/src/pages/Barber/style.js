@@ -74,3 +74,41 @@ export const RegisterLink = styled.div`
     }
   }
 `;
+
+export const ServiceItem = styled.li`
+  background: #f8f9fa;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+  
+  div {
+    display: flex;
+    gap: 1rem;
+    margin: 0.5rem 0;
+  }
+  
+  p {
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
+`;
+
+export const ScheduleItem = styled.li`
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  
+  div {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  
+  span {
+    background: #e9ecef;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+`;

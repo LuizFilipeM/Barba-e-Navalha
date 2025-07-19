@@ -1,9 +1,11 @@
-import { Routes, Route } from "react-router-dom"
+import { Routes, Route } from "react-router-dom";
 
-import { Client } from "../pages/Client"
-import { Profile } from "../pages/Profile"
-import { NotFound } from "../pages/NotFound"
-import { Required } from "../pages/Required"
+import { Client } from "../pages/Client";
+import { Profile } from "../pages/Profile";
+import { NotFound } from "../pages/NotFound";
+import { Required } from "../pages/Required";
+import { DetalheBarbearia } from "../pages/DetalheBarbearia";
+
 
 export function RouteClient() {
   return (
@@ -11,7 +13,8 @@ export function RouteClient() {
       <Route path="/" element={<Client />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/required" element={<Required />} />
+      <Route path="/barbearia/:id" element={<DetalheBarbearia />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
-  )
+  );
 }

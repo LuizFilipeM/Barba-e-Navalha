@@ -37,9 +37,9 @@ def inserir_agendamento_logica(data):
 
         try:
             novo_servico = Servicos.objects.get(id=int(servico_id_str), idlocal=local_do_barbeiro)
-            if novo_servico.duracao is None or novo_servico.duracao <= 0:
+            if novo_servico.tempo is None or novo_servico.tempo <= 0:
                 return False, f"O serviço '{novo_servico.nome}' não possui uma duração válida."
-            duracao_novo_servico_min = novo_servico.duracao
+            duracao_novo_servico_min = novo_servico.tempo
         except Servicos.DoesNotExist:
             return False, f"Serviço não encontrado ou não oferecido no local '{local_do_barbeiro.nome_local}'."
         except (ValueError, TypeError):
@@ -59,9 +59,9 @@ def inserir_agendamento_logica(data):
         # Conflito para o Barbeiro
         agendamentos_barbeiro_no_dia = Agenda.objects.filter(idbarbeiro=barbeiro_solicitado, data=data_obj).select_related('idservicos')
         for ag_existente in agendamentos_barbeiro_no_dia:
-            if ag_existente.idservicos and ag_existente.idservicos.duracao:
+            if ag_existente.idservicos and ag_existente.idservicos.tempo:
                 existente_inicio_dt = datetime.datetime.combine(ag_existente.data, ag_existente.hora)
-                existente_fim_dt = existente_inicio_dt + datetime.timedelta(minutes=ag_existente.idservicos.duracao)
+                existente_fim_dt = existente_inicio_dt + datetime.timedelta(minutes=ag_existente.idservicos.tempo)
                 if _check_overlap(novo_agendamento_inicio_dt, novo_agendamento_fim_dt, existente_inicio_dt, existente_fim_dt):
                     # Se houver conflito, retorna a mensagem de erro detalhada e para a execução.
                     return False, f"O barbeiro {barbeiro_solicitado.nome} já possui um agendamento conflitante das {existente_inicio_dt.strftime('%H:%M')} às {existente_fim_dt.strftime('%H:%M')}."
@@ -69,9 +69,9 @@ def inserir_agendamento_logica(data):
         # Conflito para o Cliente
         agendamentos_cliente_no_dia = Agenda.objects.filter(idcliente=cliente, data=data_obj).select_related('idservicos')
         for ag_existente in agendamentos_cliente_no_dia:
-            if ag_existente.idservicos and ag_existente.idservicos.duracao:
+            if ag_existente.idservicos and ag_existente.idservicos.tempo:
                 existente_inicio_dt = datetime.datetime.combine(ag_existente.data, ag_existente.hora)
-                existente_fim_dt = existente_inicio_dt + datetime.timedelta(minutes=ag_existente.idservicos.duracao)
+                existente_fim_dt = existente_inicio_dt + datetime.timedelta(minutes=ag_existente.idservicos.tempo)
                 if _check_overlap(novo_agendamento_inicio_dt, novo_agendamento_fim_dt, existente_inicio_dt, existente_fim_dt):
                     return False, f"Você (cliente {cliente.nome}) já possui um agendamento conflitante neste horário."
 
@@ -176,7 +176,7 @@ def atualiza_agendamento_logica(data):
                 nome_barbeiro=agendamento.idbarbeiro.nome,
                 nova_data_str=data_str_calendar,
                 nova_hora_str=hora_str_calendar,
-                duracao_minutos=agendamento.idservicos.duracao,
+                duracao_minutos=agendamento.idservicos.tempo,
                 local_endereco=local_do_barbeiro.endereco,
                 local_nome=local_do_barbeiro.nome_local
             )
@@ -437,7 +437,7 @@ def listar_agendamentos_barbeiro_logica(data):
                 'hora': ag.hora.strftime('%H:%M'),
                 'cliente_nome': ag.idcliente.nome if ag.idcliente else 'N/A',
                 'servico_nome': ag.idservicos.nome if ag.idservicos else 'N/A',
-                'servico_duracao': ag.idservicos.duracao if ag.idservicos else 'N/A',
+                'servico_duracao': ag.idservicos.tempo if ag.idservicos else 'N/A',
             })
 
         return JsonResponse({"status": True, "data": resultado})
@@ -495,7 +495,7 @@ def listar_todos_servicos_logica():
                 'nome': servico.nome,
                 'descricao': servico.descricao,
                 'preco': f"{servico.preco:.2f}" if servico.preco is not None else "N/A",
-                'duracao': servico.duracao,
+                'duracao': servico.tempo,
                 'local_id': servico.idlocal.id if servico.idlocal else None,
                 'local_nome': servico.idlocal.nome_local if servico.idlocal else "Sem local associado"
             })
@@ -519,7 +519,7 @@ def listar_todos_horarios_logica():
         todos_os_horarios = Horarios.objects.select_related('idlocal').all().order_by('idlocal__nome_local', 'dia_semana')
         
         if not todos_os_horarios.exists():
-            return True, [] # Retorna sucesso com uma lista vazia se não houver horários
+            return JsonResponse({"status": True, "data": []}) # Retorna sucesso com uma lista vazia se não houver horários
 
         resultado = []
         for horario in todos_os_horarios:
@@ -531,12 +531,12 @@ def listar_todos_horarios_logica():
                 'local_nome': horario.idlocal.nome_local if horario.idlocal else "Sem local associado"
             })
 
-        return True, resultado
+        return JsonResponse({"status": True, "data": resultado})
 
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return False, f"Erro inesperado ao listar os horários: {str(e)}"
+        return JsonResponse({"status": False, "msg": f"Erro inesperado ao listar os horários: {str(e)}"})
 
 def criar_intervalo_logica(data):
     """
@@ -568,16 +568,16 @@ def criar_intervalo_logica(data):
 
         agendamentos_existentes = Agenda.objects.filter(idbarbeiro=barbeiro, data=data_obj)
         for ag_existente in agendamentos_existentes:
-            if ag_existente.idservicos and ag_existente.idservicos.duracao:
+            if ag_existente.idservicos and ag_existente.idservicos.tempo:
                 existente_inicio_dt = datetime.datetime.combine(ag_existente.data, ag_existente.hora)
-                existente_fim_dt = existente_inicio_dt + datetime.timedelta(minutes=ag_existente.idservicos.duracao)
+                existente_fim_dt = existente_inicio_dt + datetime.timedelta(minutes=ag_existente.idservicos.tempo)
                 if _check_overlap(intervalo_inicio_dt, intervalo_fim_dt, existente_inicio_dt, existente_fim_dt):
                     return JsonResponse({"status": False, "msg": "Você já possui um agendamento de cliente neste horário."})
 
         # Cria o "agendamento" de intervalo, sem cliente associado (idcliente=None)
         # e com o serviço de intervalo.
         # A duração do serviço será usada para fins de checagem de conflito.
-        servico_intervalo.duracao = duracao_minutos
+        servico_intervalo.tempo = duracao_minutos
         servico_intervalo.save()
 
         novo_intervalo = Agenda.objects.create(
@@ -726,7 +726,7 @@ def editar_local_barbeiro_logica(data):
             servico_a_editar.preco = data['preco']
             updated = True
         if 'duracao' in data:
-            servico_a_editar.duracao = data['duracao']
+            servico_a_editar.tempo = data['duracao']
             updated = True
         
         if updated:

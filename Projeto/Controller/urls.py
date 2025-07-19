@@ -31,17 +31,17 @@ urlpatterns = [
 
     #    SERVIÇO
     path("services/<int:id>/", views.cadastro_servico_view, name="api_cadastro_servico"),
-    path("list-services", views.listar_todos_servicos_view, name="api_lista_servico"),
+    path("list-services/", views.listar_todos_servicos_view, name="api_lista_servico"),
     path("edit-services", views.editar_servico_barbeiro_view, name="api_edita_servico"),
     path("delete-services", views.excluir_servico_barbeiro_view, name="api_delete_servico"),
 
     #   HORARIOS
     path("schedule/<int:id>/", views.cadastrar_horario_view, name="api_cadastro_horario"),
-    path("list-schedule", views.listar_todos_horarios_view, name="api_lista_horarios"),
+    path("list-schedule/", views.listar_todos_horarios_view, name="api_lista_horarios"),
     path("create-interval", views.criar_intervalo_view, name="api_cria_intervalos"),
 
     #   LOCAL
-    path("local-edit/<int:id>/", views.editar_local_view, name="api_editar_local"), # AVALIZAR QUAL FUNCAO SERÁ USADA AQUI
+    path("local-edit/<int:id>/", views.editar_local_view, name="api_editar_local"), # AVALIAR QUAL FUNCAO SERÁ USADA AQUI
     path("local-delete/<int:id>/", views.delete_local_view, name="api_deletar_local"),
 
     #   AUXILIARES

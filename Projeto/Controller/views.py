@@ -150,8 +150,7 @@ def forgot_pass_view(request):
 @csrf_exempt
 def obtem_local_view(request):
     data = processar_requisicao(request)
-    response = obter_local_agendamento_logica(data)
-    return response
+    return obter_local_agendamento_logica(data)
 
 # Retorna o proximo agendamento de um cliente e as informações sobre o local
 @csrf_exempt
@@ -164,6 +163,7 @@ def prox_agend_view(request):
 @csrf_exempt
 def local_barbeiro_view(request):
     response = listar_todas_barbearias_logica()
+    print("Response: ", response  )
     return response
 
 # Retorna os agendamentos futuro de um barbeiro
@@ -235,7 +235,9 @@ def listar_todos_servicos_view(request):
 # Retorna todos os horarios cadastrados e seu local associado
 @csrf_exempt
 def listar_todos_horarios_view(request):
-    return listar_todos_horarios_logica()
+    response = listar_todos_horarios_logica()
+    
+    return response
 
 # Cria intervalos para o barbeiro
 @csrf_exempt
