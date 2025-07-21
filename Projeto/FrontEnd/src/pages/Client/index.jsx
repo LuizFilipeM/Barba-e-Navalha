@@ -52,7 +52,7 @@ export function Client() {
         <Title>Barbearias disponíveis</Title>
         <Section>
           {barbearias.map((local) => (
-                <Card>
+                <Card key={local.id}>
                   <CardHeader key={local.id}>{local.nome_local}</CardHeader>
                   <Address>
                     <p><strong>Endereço:</strong> {local.endereco}</p>

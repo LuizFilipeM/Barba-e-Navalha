@@ -99,8 +99,8 @@ WSGI_APPLICATION = "Projeto.wsgi.application"
 
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
     "http://localhost:8000",
+    "http://localhost:8001",
 ]
 
 CORS_ALLOW_HEADERS = [
@@ -112,8 +112,8 @@ CORS_ALLOW_HEADERS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
     "http://localhost:8000",
+    "http://localhost:8001",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -127,7 +127,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'barbaNavalha',
         'USER': 'postgres',
-        'PASSWORD': '--------',
+        'PASSWORD': 'Vlrc2002',
         'HOST': 'localhost',
         'PORT': '5433',
     }

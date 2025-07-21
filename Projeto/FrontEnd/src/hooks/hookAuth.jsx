@@ -20,13 +20,12 @@ export function AuthProvider({ children }) {
   }, [])
 
   async function signIn({ email, password }) {
-    
     const response = await api.post("/api/login/", {
       email,
       password
     })
+    
     if (response.data.success === true) {
-      
       const userData = response.data
       const token = userData.token
 
@@ -38,8 +37,28 @@ export function AuthProvider({ children }) {
 
       return { success: true, token }
     } else {
-     
       return { success: false, message: "Credenciais inválidas!" }
+    }
+  }
+
+  async function signInWithGoogle(token) {
+    const response = await api.post("/oauth/login/google-oauth2/", {
+      token
+    })
+    
+    if (response.data.success === true) {
+      const userData = response.data
+      const token = userData.token
+
+      setUser(userData)
+      setIsAuthenticated(true)
+
+      localStorage.setItem("user", JSON.stringify(userData))
+      localStorage.setItem("token", token)
+
+      return { success: true, token }
+    } else {
+      return { success: false, message: response.data.message || "Falha no login com Google" }
     }
   }
 
@@ -51,9 +70,14 @@ export function AuthProvider({ children }) {
     navigate("/")
   }
 
-
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, signIn, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isAuthenticated, 
+      signIn, 
+      signInWithGoogle, 
+      signOut 
+    }}>
       {children}
     </AuthContext.Provider>
   )
@@ -62,4 +86,3 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   return useContext(AuthContext)
 }
-

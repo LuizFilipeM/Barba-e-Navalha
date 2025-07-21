@@ -58,7 +58,7 @@ export const CardHeader = styled.h4`
   color: #222;
 `;
 
-export const Address = styled.p`
+export const Address = styled.div`
   color: #666;
   font-size: 0.95rem;
 `;

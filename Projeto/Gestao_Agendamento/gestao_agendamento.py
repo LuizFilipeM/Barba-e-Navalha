@@ -402,7 +402,7 @@ def listar_locais_barbeiro_logica(data):
     except Exception as e:
         return False, f"Erro inesperado: {str(e)}"
     
-def lista_agendamentos_logica(data):
+def lista_agendamentos_barbeiro_logica(data):
     try:
         barbeiro_id = data['barbeiro_id']
         hoje = timezone.now().date()

@@ -1,8 +1,8 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
+import { api } from "../../services/api"
 
 import { GoogleLogin } from '@react-oauth/google';
-import { api } from "../../services/api"
 
 import { Header } from "../../components/Header"
 import { Input } from "../../components/Input"
@@ -17,7 +17,7 @@ import { Container, Context, Form, Title, BackLinkWrapper, ImageContainer, HeroI
 export function SignIn() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const { signIn } = useAuth()
+  const { signIn, signInWithGoogle } = useAuth()
   const navigate = useNavigate()
 
   async function handleSignIn(event) {
@@ -33,23 +33,17 @@ export function SignIn() {
   }
 
   const handleLoginSuccess = async (credentialResponse) => {
-    const { credential } = credentialResponse;
-
-    const response = await api.post('/oauth/login/google-oauth2/', {
-        token: credential
-      });
-
-    if (response.data.success) {
-      console.log("Usuário autenticado com sucesso!");
-
-      const data = response.data;
-      console.log("Usuário autenticado:", data);
-
-      localStorage.setItem("token", data.token);
+    await api.get('/csrf/')
+      
+    const { credential } = credentialResponse
+    const result = await signInWithGoogle(credential)
+      
+    if (!result.success) {
+      alert(`❌ ${result.message}`)
     } else {
-      console.error("Erro ao autenticar com o backend");
+      navigate("/")
     }
-  };
+  }
 
   return (
     <>
@@ -88,7 +82,8 @@ export function SignIn() {
 
             <GoogleLogin
               onSuccess={handleLoginSuccess}
-              onError={() => console.log("Login com Google falhou")}
+              onError={() => alert("Falha no login com Google")}
+              useOneTap
             />
 
             <BackLinkWrapper style={{ textAlign: "center", marginTop: "1rem" }}>

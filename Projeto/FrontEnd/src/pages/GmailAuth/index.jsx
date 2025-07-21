@@ -23,11 +23,13 @@ export function GmailAuth() {
     data_nascimento: "",
   });
 
+  const [googleUser, setGoogleUser] = useState(null);
+
   function getCookie(name) {
     return document.cookie
-        .split('; ')
-        .find(row => row.startsWith(name + '='))
-        ?.split('=')[1];
+      .split('; ')
+      .find(row => row.startsWith(name + '='))
+      ?.split('=')[1];
   }
 
   const navigate = useNavigate();
@@ -51,6 +53,10 @@ export function GmailAuth() {
       }
     }
 
+    if (!googleUser) {
+      return "Você precisa fazer login com o Google primeiro";
+    }
+
     return null;
   }
 
@@ -62,11 +68,7 @@ export function GmailAuth() {
       cidade: "",
       data_nascimento: "",
     });
-  }
-
-  function formatarData(data) {
-    const [dia, mes, ano] = data.split("/");
-    return `${ano}-${mes}-${dia}`;
+    setGoogleUser(null);
   }
 
   async function handleSignUp(e) {
@@ -78,28 +80,34 @@ export function GmailAuth() {
       return;
     }
     
+    const csrftoken = getCookie('csrftoken');
+    
     const dados = {
       ...formData,
       tipo: formData.tipo === TipoUsuario.Cliente ? "Cliente" : "Barbeiro",
-      data_nascimento: formatarData(formData.data_nascimento),
+      google_id: googleUser.sub,
+      email: googleUser.email,
+      nome: googleUser.name,
     };
 
-    const {credential} = credentialResponse
+    try {
+      const response = await api.post("/cadastro-google/", dados, {
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrftoken
+        },
+      });
 
-    const response = await api.post("/cadastro-google/", dados, {
-      credentials: "include",  
-      headers: { "Content-Type": "application/json",
-        "X-CSRFToken": csrftoken
-      },
-    });
-
-    if (response.data.status === true) {
-      alert("Cadastro realizado com sucesso! ");
-      limparCampos();
-      navigate("/");
-    } else {
-      alert("Erro: " + response.data.message);
-      limparCampos();
+      if (response.data.status === true) {
+        alert("Cadastro realizado com sucesso! ");
+        limparCampos();
+        navigate("/");
+      } else {
+        alert("Erro: " + response.data.message);
+      }
+    } catch (error) {
+      alert("Ocorreu um erro durante o cadastro.");
+      console.error(error);
     }
   }
 
@@ -115,52 +123,64 @@ export function GmailAuth() {
 
       <Container>
         <Context>
-          <Title>Faça o seu cadastro</Title>
+          <Title>Faça o seu cadastro com Google</Title>
 
-          <Form onSubmit={handleSignUp}>
-            <label htmlFor="tipo">Tipo de usuário</label>
-            <Select id="tipo" name="tipo" value={formData.tipo} onChange={handleChange}>
-              <option value={TipoUsuario.Cliente}>Cliente</option>
-              <option value={TipoUsuario.Barbeiro}>Barbeiro</option>
-            </Select>
+          {!googleUser ? (
+            <div id="googleSignInButton" style={{ margin: '20px 0' }}></div>
+          ) : (
+            <div style={{ margin: '20px 0' }}>
+              <p>Logado como: {googleUser.name} ({googleUser.email})</p>
+            </div>
+          )}
 
+          {googleUser && (
+            <Form onSubmit={handleSignUp}>
+              <label htmlFor="tipo">Tipo de usuário</label>
+              <Select id="tipo" name="tipo" value={formData.tipo} onChange={handleChange}>
+                <option value={TipoUsuario.Cliente}>Cliente</option>
+                <option value={TipoUsuario.Barbeiro}>Barbeiro</option>
+              </Select>
 
-            <Input 
-              name="cpf" 
-              label="CPF" 
-              placeholder="CPF" 
-              type="number" 
-              value={formData.cpf} 
-              onChange={handleChange} />
-            <Input 
-              name="telefone" 
-              label="Telefone" 
-              placeholder="Telefone" 
-              type="number" 
-              value={formData.telefone} 
-              onChange={handleChange} />
-            <Input 
-              name="cidade" 
-              label="Cidade" 
-              placeholder="Cidade" 
-              type="text" 
-              value={formData.cidade} 
-              onChange={handleChange} />
-            <Input
-              name="data_nascimento"
-              label="Data de Nascimento"
-              placeholder="DD/MM/AAAA"
-              type="date"
-              value={formData.data_nascimento}
-              onChange={handleChange}
-            />
+              <Input 
+                name="cpf" 
+                label="CPF" 
+                placeholder="CPF" 
+                type="text" 
+                value={formData.cpf} 
+                onChange={handleChange} 
+              />
+              <Input 
+                name="telefone" 
+                label="Telefone" 
+                placeholder="Telefone" 
+                type="text" 
+                value={formData.telefone} 
+                onChange={handleChange} 
+              />
+              <Input 
+                name="cidade" 
+                label="Cidade" 
+                placeholder="Cidade" 
+                type="text" 
+                value={formData.cidade} 
+                onChange={handleChange} 
+              />
+              <Input
+                name="data_nascimento"
+                label="Data de Nascimento"
+                placeholder="DD/MM/AAAA"
+                type="date"
+                value={formData.data_nascimento}
+                onChange={handleChange}
+              />
 
-            <Button type="submit" title="Cadastrar" />
+              <Button type="submit" title="Completar Cadastro" />
 
-            <BackLinkWrapper>
-              <Link to="/">Voltar</Link>
-            </BackLinkWrapper>
-          </Form>
+              <BackLinkWrapper>
+                <Link to="/">Voltar</Link>
+              </BackLinkWrapper>
+            </Form>
+          )}
         </Context>
       </Container>
 
@@ -168,4 +188,3 @@ export function GmailAuth() {
     </>
   );
 }
-

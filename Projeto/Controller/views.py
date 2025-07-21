@@ -189,7 +189,7 @@ def agenda_barbeiro_view(request):
     
     try:
         barbeiro_id = int(barbeiro_id)
-        return lista_agendamentos_logica({'barbeiro_id': barbeiro_id})
+        return lista_agendamentos_barbeiro_logica({'barbeiro_id': barbeiro_id})
     except ValueError:
         return JsonResponse({"status": False, "msg": "ID do barbeiro deve ser um número"}, status=400)
 
