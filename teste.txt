@@ -62,3 +62,10 @@ curl -X POST http://localhost:8000/lista-agenda-barber/ \
      -H "Content-Type: application/json" \
      -d '{"barbeiro_id":59}'
      
+
+
+
+############         RETORNA TODAS AS BAREARIAS      ############
+curl -X POST http://localhost:8000/barbershops/ \
+     -H "Content-Type: application/json" \
+     -d '{"barbeiro_nome":"barbeiro"}'

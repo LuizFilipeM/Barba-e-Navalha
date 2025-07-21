@@ -83,9 +83,9 @@ export function GmailAuth() {
       tipo: formData.tipo === TipoUsuario.Cliente ? "Cliente" : "Barbeiro",
       data_nascimento: formatarData(formData.data_nascimento),
     };
-    
-    const csrftoken = getCookie('csrftoken');
-    
+
+    const {credential} = credentialResponse
+
     const response = await api.post("/cadastro-google/", dados, {
       credentials: "include",  
       headers: { "Content-Type": "application/json",

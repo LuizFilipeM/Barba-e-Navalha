@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom"
+import { Routes, Route } from "react-router-dom";
 
 import { Client } from "../pages/Client"
 import { Profile } from "../pages/Profile"
@@ -15,5 +15,5 @@ export function RouteClient() {
       <Route path="/booking/:id" element={<Booking />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
-  )
+  );
 }
