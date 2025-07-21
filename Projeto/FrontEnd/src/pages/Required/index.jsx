@@ -1,44 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/hookAuth";
 
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
 
 import { Container, Content, Title, List, ListItem } from "./style";
-
-const MOCKED_AGENDAMENTOS = [
-  {
-    id: 1,
-    barbearia: {
-      nome: "Barbearia do Zé",
-      endereco: "Rua A, Centro, São Paulo",
-    },
-    data: "2025-06-12",
-    horario: "10:00",
-  },
-  {
-    id: 2,
-    barbearia: {
-      nome: "Barbearia Fina",
-      endereco: "Av. B, Jardim, Rio de Janeiro",
-    },
-    data: "2025-06-13",
-    horario: "14:00",
-  },
-  {
-    id: 3,
-    barbearia: {
-      nome: "Estilo & Corte",
-      endereco: "Rua das Flores, Curitiba",
-    },
-    data: "2025-06-13",
-    horario: "16:00",
-  },
-];
+import { api } from "../../services/api";
 
 export function Required() {
-  const { signOut } = useAuth();
-  const [agendamentos] = useState(MOCKED_AGENDAMENTOS);
+  const { signOut, user } = useAuth();
+  const [agendamentos, setAgendamentos] = useState([]);
+
+  useEffect(() => {
+    async function fetchAgendamentos() {
+      try {
+        const response = await api.get("/listar-agendamentos/", {
+          params: {
+            cliente: user.name.trim(),
+          },
+        });
+        setAgendamentos(response.data.agendamentos || []);
+      } catch (error) {
+        console.error("Erro ao buscar agendamentos:", error);
+      }
+    }
+
+    fetchAgendamentos();
+  }, [user.name]);
 
   return (
     <Container>
@@ -56,15 +44,15 @@ export function Required() {
           <List>
             {agendamentos.map((agendamento) => (
               <ListItem key={agendamento.id}>
-                <strong>{agendamento.barbearia.nome}</strong><br />
-                📍 {agendamento.barbearia.endereco}<br />
-                🕒 {agendamento.horario} - 📅 {agendamento.data}
+                <strong>Barbearia: {agendamento.local_nome}</strong><br />
+                📍 {agendamento.local_endereco}<br />
+                🕒 {agendamento.hora} - 📅 {agendamento.data}
               </ListItem>
             ))}
           </List>
         ) : (
           <p style={{ textAlign: "center", color: "#666" }}>
-            Nenhum pedido encontrado.
+            Nenhum agendamento encontrado.
           </p>
         )}
       </Content>

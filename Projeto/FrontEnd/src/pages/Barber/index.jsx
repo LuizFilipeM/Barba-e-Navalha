@@ -13,63 +13,24 @@ export function Barber() {
   const [horarios, setHorarios] = useState([]);
 
   useEffect(() => {
-    async function fetchBarbearias() {
-      try {
-        const response = await api.get("/barbershops/");
-        const locais = response.data.data;
-        setBarbearias(locais);
-        console.log(locais);
+    async function fetchData() {
+        try {
+            const [resBarbearias, resServicos, resHorarios] = await Promise.all([
+                api.get("/barbershops/"),
+                api.get("/list-services/"),
+                api.get("/list-schedule/")
+            ]);
 
-        if (response.data.status === true) {
-          console.log("Barbearias carregadas com sucesso!");
-        } else {
-          alert("Erro: BARBEARIA - " + response.data.message);
+            setBarbearias(resBarbearias.data.data);
+            setServices(resServicos.data.data);
+            setHorarios(resHorarios.data.data);
+        } catch (error) {
+            alert("Erro ao carregar dados.");
+            console.error(error);
         }
-      } catch (error) {
-        console.error("Erro ao buscar barbearias:", error);
-        alert("Erro ao buscar barbearias. Tente novamente mais tarde.");
-      }
     }
 
-    async function fetchServices() {
-      try {
-        const response = await api.get("/list-services/");
-        const servicos = response.data.data;
-        setServices(servicos);
-        console.log(servicos);
-
-        if (response.data.status === true) {
-          console.log("Serviços carregados com sucesso!");
-        } else {
-          alert("Erro: SERVIÇOS - " + response.data.message);
-        }
-      } catch (error) {
-        console.error("Erro ao buscar serviços:", error);
-        alert("Erro ao buscar serviços. Tente novamente mais tarde.");
-      }
-    }
-
-    async function fetchHorarios() {
-      try {
-        const response = await api.get("/list-schedule/");
-        const horariosData = response.data.data;
-        setHorarios(horariosData);
-        console.log(horariosData);
-
-        if (response.data.status === true) {
-          console.log("Horários carregados com sucesso!");
-        } else {
-          alert("Erro: HORÁRIOS - " + response.data.message);
-        }
-      } catch (error) {
-        console.error("Erro ao buscar horários:", error);
-        alert("Erro ao buscar horários. Tente novamente mais tarde.");
-      }
-    }
-
-    fetchBarbearias();
-    fetchServices();
-    fetchHorarios();
+    fetchData();
   }, []);
 
 return (

@@ -93,8 +93,14 @@ def atualizar_agendamento_view(request):
 # Retorna todos os agendamentos de um cliente a partir de seu nome
 @csrf_exempt
 def listar_agendamentos_view(request):
-    data = processar_requisicao(request)
-    return lista_agendamentos_logica(data)
+    if request.method != 'GET':
+        return JsonResponse({"status": False, "msg": "Método não permitido"}, status=405)
+    
+    cliente = request.GET.get('cliente')
+    if not cliente:
+        return JsonResponse({"status": False, "msg": "Parâmetro 'cliente' é obrigatório"}, status=400)
+    
+    return lista_agendamentos_logica({'cliente': cliente})
 
 # Realiza o processo de editar o perfil do usuário
 @csrf_exempt
@@ -174,9 +180,18 @@ def local_barbeiro_view(request):
 # Retorna os agendamentos futuro de um barbeiro
 @csrf_exempt
 def agenda_barbeiro_view(request):
-    data = processar_requisicao(request)
-    response = listar_agendamentos_barbeiro_logica(data)
-    return response
+    if request.method != 'GET':
+        return JsonResponse({"status": False, "msg": "Método não permitido"}, status=405)
+    
+    barbeiro_id = request.GET.get('barbeiro_id')
+    if not barbeiro_id:
+        return JsonResponse({"status": False, "msg": "Parâmetro 'barbeiro_id' é obrigatório"}, status=400)
+    
+    try:
+        barbeiro_id = int(barbeiro_id)
+        return lista_agendamentos_logica({'barbeiro_id': barbeiro_id})
+    except ValueError:
+        return JsonResponse({"status": False, "msg": "ID do barbeiro deve ser um número"}, status=400)
 
 # Retorna todos os dados do usuário baseado no id passado
 @csrf_exempt

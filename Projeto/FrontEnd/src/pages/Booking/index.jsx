@@ -34,7 +34,6 @@ export function Booking() {
         setBarbearias(resBarbearias.data.data);
         setServices(resServicos.data.data);
         setHorarios(resHorarios.data.data);
-        console.log(resHorarios.data.data);
       } catch (error) {
         alert("Erro ao carregar dados.");
         console.error(error);

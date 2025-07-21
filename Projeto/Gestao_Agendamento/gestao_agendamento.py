@@ -6,6 +6,7 @@ from Projeto.Login_Autenticacao.models import *
 from .apiCalendar import criar_evento, deletar_evento_calendar, atualizar_evento_calendar, listar_eventos_calendar
 from .apiMaps import gerar_url_mapa_incorporado
 from django.db.models import Q
+from django.utils import timezone
 import datetime
 import traceback
 
@@ -199,11 +200,11 @@ def lista_agendamentos_logica(data):
     try:
         nome_cliente = data.get('cliente')
         if not nome_cliente:
-            return False, "Nome do cliente não fornecido"
+            return JsonResponse({"status": False, "msg": "Nome do cliente obrigatório."})
 
         cliente = Cliente.objects.filter(nome=nome_cliente).first()
         if not cliente:
-            return False, "Cliente não encontrado."
+            return JsonResponse({"status": False, "msg": "Cliente não encontrado."})
         
         # Obter data e hora atuais
         agora = datetime.datetime.now()
@@ -216,7 +217,7 @@ def lista_agendamentos_logica(data):
         # A lógica de sincronização com o Calendar continua a mesma
         success_calendar, eventos_do_calendar = listar_eventos_calendar()
         if not success_calendar:
-            return False, eventos_do_calendar
+            return JsonResponse({"status": False, "msg": f"Erro ao listar eventos do Google Calendar: {eventos_do_calendar}"})
             
         ids_no_calendario = {evento['id'] for evento in eventos_do_calendar}
 
@@ -245,11 +246,11 @@ def lista_agendamentos_logica(data):
             
             resultado_final.append(ag_data)
 
-        return True, resultado_final
+        return JsonResponse({"status": True, "agendamentos": resultado_final})
 
     except Exception as e:
         # ... (seu tratamento de erro)
-        return False, f"Erro inesperado ao listar agendamentos: {str(e)}"
+        return JsonResponse({"status": False, "msg": f"Erro inesperado: {str(e)}"})
     
 def obter_local_agendamento_logica(data):
     """
@@ -401,54 +402,34 @@ def listar_locais_barbeiro_logica(data):
     except Exception as e:
         return False, f"Erro inesperado: {str(e)}"
     
-def listar_agendamentos_barbeiro_logica(data):
-    """
-    Lista todos os agendamentos FUTUROS de um barbeiro específico,
-    a partir do momento exato da consulta.
-    """
+def lista_agendamentos_logica(data):
     try:
-        barbeiro_id = data.get('barbeiro_id')
-        if not barbeiro_id:
-            return False, "ID do barbeiro não fornecido."
-            
-        barbeiro = Barbeiro.objects.get(id=barbeiro_id)
+        barbeiro_id = data['barbeiro_id']
+        hoje = timezone.now().date()
         
-        agora = datetime.datetime.now()
-        data_atual = agora.date()
-        hora_atual = agora.time()
-
-        filtro_futuros = Q(data__gt=data_atual) | Q(data=data_atual, hora__gte=hora_atual)
-
-        # <<< INÍCIO DA CORREÇÃO >>>
-        # O argumento posicional (filtro_futuros) agora vem ANTES do argumento de palavra-chave.
         agendamentos = Agenda.objects.filter(
-            filtro_futuros,
-            idbarbeiro=barbeiro
-        ).select_related(
-            'idcliente', 
-            'idservicos'
-        ).order_by('data', 'hora')
-        # <<< FIM DA CORREÇÃO >>>
-
-        resultado = []
-        for ag in agendamentos:
-            resultado.append({
-                'id': ag.id,
-                'data': ag.data.strftime('%d/%m/%Y'),
-                'hora': ag.hora.strftime('%H:%M'),
-                'cliente_nome': ag.idcliente.nome if ag.idcliente else 'N/A',
-                'servico_nome': ag.idservicos.nome if ag.idservicos else 'N/A',
-                'servico_duracao': ag.idservicos.tempo if ag.idservicos else 'N/A',
-            })
-
-        return JsonResponse({"status": True, "data": resultado})
-
-    except Barbeiro.DoesNotExist:
-        return JsonResponse({"status": False, "msg": f"Barbeiro com ID '{barbeiro_id}' não encontrado."})
+            idbarbeiro=barbeiro_id,
+            data__gte=hoje
+        ).select_related('idcliente', 'idservicos').order_by('data', 'hora')
+        
+        resultado = [{
+            'id': ag.id,
+            'data': ag.data.strftime('%d/%m/%Y'),
+            'hora': ag.hora.strftime('%H:%M'),
+            'cliente_nome': ag.idcliente.nome,
+            'servico_nome': ag.idservicos.nome,
+        } for ag in agendamentos]
+        
+        return JsonResponse({
+            'status': True,
+            'agendamentos': resultado
+        })
+        
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return JsonResponse({"status": False, "msg": f"Erro inesperado: {str(e)}"})
+        return JsonResponse({
+            'status': False,
+            'msg': f'Erro ao processar agendamentos: {str(e)}'
+        }, status=500)
     
 def listar_todas_barbearias_logica():
     """

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/hookAuth";
 import { api } from "../../services/api";
-import { Link } from "react-router-dom"; 
+import { Link } from "react-router-dom";
 
 import { Main, Section, Card, CardHeader, Address, ServicesList, Title } from "./style";
 
@@ -18,20 +18,20 @@ export function Client() {
 
   useEffect(() => {
     async function fetchData() {
-        try {
-            const [resBarbearias, resServicos, resHorarios] = await Promise.all([
-                api.get("/barbershops/"),
-                api.get("/list-services/"),
-                api.get("/list-schedule/")
-            ]);
+      try {
+        const [resBarbearias, resServicos, resHorarios] = await Promise.all([
+          api.get("/barbershops/"),
+          api.get("/list-services/"),
+          api.get("/list-schedule/")
+        ]);
 
-            setBarbearias(resBarbearias.data.data);
-            setServices(resServicos.data.data);
-            setHorarios(resHorarios.data.data);
-        } catch (error) {
-            alert("Erro ao carregar dados.");
-            console.error(error);
-        }
+        setBarbearias(resBarbearias.data.data);
+        setServices(resServicos.data.data);
+        setHorarios(resHorarios.data.data);
+      } catch (error) {
+        alert("Erro ao carregar dados.");
+        console.error(error);
+      }
     }
 
     fetchData();
