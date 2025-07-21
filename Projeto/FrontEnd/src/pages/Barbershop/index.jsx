@@ -18,6 +18,7 @@ export function BarberShop() {
     nomeLocal: "",
     rua: "",
     bairro: "",
+    telefone: "",
     cidadeLocal: "",
     cnpj: "",
   });
@@ -44,6 +45,7 @@ export function BarberShop() {
       { nome: "Nome do Local", valor: formData.nomeLocal },
       { nome: "Rua", valor: formData.rua },
       { nome: "Bairro", valor: formData.bairro },
+      { nome: "Telefone", valor: formData.telefone },
       { nome: "Cidade do Local", valor: formData.cidadeLocal },
       { nome: "CNPJ", valor: formData.cnpj },
     ];
@@ -66,6 +68,7 @@ export function BarberShop() {
       nomeLocal: "",
       rua: "",
       bairro: "",
+      telefone: "",
       cidadeLocal: "",
       cnpj: "",
     });
@@ -121,6 +124,15 @@ export function BarberShop() {
         />
 
         <Input
+          placeholder="Telefone"
+          type="number"
+          name="telefone"
+          value={formData.telefone}
+          onChange={handleChange}
+          label="Telefone"
+        />
+
+        <Input
           placeholder="Rua"
           type="text"
           name="rua"
@@ -149,7 +161,7 @@ export function BarberShop() {
 
         <Input
           placeholder="CNPJ"
-          type="text"
+          type="number"
           name="cnpj"
           value={formData.cnpj}
           onChange={handleChange}

@@ -231,7 +231,6 @@ def editar_perfil(data, id):
     try:
         usuario = Usuario.objects.get(id=id)
         if check_password(senha, usuario.senha):
-            print("AQUI3    ")  
 
             if usuario.tipo == 'Cliente':
                 perfil = Cliente.objects.get(id=usuario)
@@ -252,7 +251,6 @@ def editar_perfil(data, id):
             perfil.cidade = data['cidade']
             perfil.save()
 
-            print("AQUI2")
             return JsonResponse ({'status': 'success'})
         
         else:
@@ -306,9 +304,8 @@ def cadastrar_local(data, id):
     nome_local = data.get('nomeLocal')
     rua = data.get('rua', '').strip()
     bairro = data.get('bairro', '').strip()
-    numero = data.get('numero', '').strip()
     cidade = data.get('cidadeLocal', '').strip()
-    endereco = f"{rua},{bairro},{numero},{cidade}"
+    endereco = f"{rua},{bairro},{cidade}"
     cnpj = data.get('cnpj')
     telefone = data.get('telefone')
     

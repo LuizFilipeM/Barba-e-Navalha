@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { Link } from "react-router-dom";
 
 export const Container = styled.section`
   background-color: #111827;
@@ -17,12 +18,6 @@ export const Title = styled.h1`
   font-size: 2rem;
   margin-bottom: 1.5rem;
   color: #333;
-`;
-
-export const TitleH1 = styled.h1`
-  font-size: 2rem;
-  margin-bottom: 1.5rem;
-  color: white;
 `;
 
 export const Paragraph = styled.p`
@@ -56,21 +51,94 @@ export const List = styled.ul`
 `;
 
 export const RegisterLink = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 6rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  margin: 2rem auto;
   text-align: center;
-  margin-top: 2rem;
-  padding: 12rem;
+`;
 
-  a {
-    text-decoration: none;
-    background-color: #111;
-    color: #fff;
-    padding: 0.6rem 1.2rem;
-    border-radius: 8px;
-    font-weight: bold;
-    transition: background 0.2s;
+export const NotificationTitle = styled.strong`
+  color: #dc3545;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+`;
+
+export const RegisterButtons = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  justify-content: center;
+`;
+
+export const RegisterButton = styled(Link)`
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid #007bff;
+  color: #007bff;
+  background-color: white;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #f0f7ff;
+  }
+
+  &.primary {
+    background-color: #007bff;
+    color: white;
 
     &:hover {
-      background-color: #333;
+      background-color: #0069d9;
+      border-color: #0062cc;
     }
+  }
+`;
+
+export const ServiceItem = styled.li`
+  background: #f8f9fa;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+  
+  div {
+    display: flex;
+    gap: 1rem;
+    margin: 0.5rem 0;
+  }
+  
+  p {
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
+`;
+
+export const ScheduleItem = styled.li`
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  
+  div {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  
+  span {
+    background: #e9ecef;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
   }
 `;

@@ -3,15 +3,19 @@ import styled from "styled-components";
 export const Container = styled.section`
   background-color: #111827;
   color: white;
-  padding: 3rem 0;
+  padding: 2rem 0;
+  display: flex;
+  justify-content: center;
+  gap: 7rem;
 `;
 
 export const Context = styled.main`
   background-color: #1f2937;
+  width: 60%;
+  height: 80%;
   max-width: 500px;
-  margin: 0rem auto;
   border-radius: 0.8rem;
-  padding: 1rem;
+  padding: 2rem;
 `;
 
 export const Title = styled.h2`
@@ -41,4 +45,17 @@ export const BackLinkWrapper = styled.div`
       text-decoration: underline;
     }
   }
+`;
+
+export const ImageContainer = styled.div`
+  width: 40%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+export const HeroImage = styled.img`
+  border-radius: 0.5rem;
+  max-width: 100%;
+  height: 80%;
 `;

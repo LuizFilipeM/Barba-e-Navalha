@@ -20,28 +20,30 @@ urlpatterns = [
     #    PERFIL
     path("api/users/<int:id>", views.editar_perfil_view, name="editar_perfil"),
     path("api/users/recover/<int:id>/", views.recuperar_dados_perfil_view, name="recuperar_perfil"),
-    path("api/users/recover-password/<int:id>/", views.recuperar_senha_view, name="recuperar_senha"),
+    #path("api/users/recover-password/<int:id>/", views.recuperar_senha_view, name="recuperar_senha"), Possivelmente não utilizada
 
     #    LOGIN E CADASTRO
     path("api/cadastro/", views.cadastro_view, name="api_cadastro"),
     path("api/login/", views.login_view, name="api_login"),
     path("locals/<int:id>/", views.cadastro_local_view, name="api_cadastro_local"),
     path("forgotPassword", views.forgot_pass_view, name="api_forgot_password"),
-    
-
+    path("api/google-login/", views.google_login),
 
     #    SERVIÇO
     path("services/<int:id>/", views.cadastro_servico_view, name="api_cadastro_servico"),
+    path("list-services/", views.listar_todos_servicos_view, name="api_lista_servico"),
+    path("edit-services", views.editar_servico_barbeiro_view, name="api_edita_servico"),
+    path("delete-services", views.excluir_servico_barbeiro_view, name="api_delete_servico"),
 
     #   HORARIOS
     path("schedule/<int:id>/", views.cadastrar_horario_view, name="api_cadastro_horario"),
+    path("list-schedule/", views.listar_todos_horarios_view, name="api_lista_horarios"),
+    path("create-interval", views.criar_intervalo_view, name="api_cria_intervalos"),
 
     #   LOCAL
-    path("local-edit/<int:id>/", views.editar_local_view, name="api_editar_local"),
+    path("local-edit/<int:id>/", views.editar_local_view, name="api_editar_local"), # AVALIAR QUAL FUNCAO SERÁ USADA AQUI
     path("local-delete/<int:id>/", views.delete_local_view, name="api_deletar_local"),
 
+    #   AUXILIARES
     path("csrf/", views.csrf_token_view, name = 'get_cookie'),
-    path("api/google-login/", views.google_login),
 ]
-
-# cadastro local, serviço e horario

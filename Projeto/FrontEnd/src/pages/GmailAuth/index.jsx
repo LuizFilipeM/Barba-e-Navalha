@@ -22,17 +22,6 @@ export function GmailAuth() {
     cidade: "",
     data_nascimento: "",
   });
-  
-  async function fetchCsrfToken() {
-    alert("jksh")
-    const response = await fetch("http://localhost:8000/csrf/", {
-        method: "GET",
-        credentials: "include"  // necessário para receber cookies
-    });
-    const data = await response.json();
-    alert("CSRF token recebido:", data.csrfToken);
-    return data.csrfToken;
-}
 
   function getCookie(name) {
     return document.cookie
@@ -102,7 +91,6 @@ export function GmailAuth() {
       headers: { "Content-Type": "application/json",
         "X-CSRFToken": csrftoken
       },
-      
     });
 
     if (response.data.status === true) {
