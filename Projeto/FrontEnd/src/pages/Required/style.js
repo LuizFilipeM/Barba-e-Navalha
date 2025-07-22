@@ -60,3 +60,6 @@ export const DeleteButton = styled.button`
   }
 `;
 
+export const ClickableAddress = styled.span`
+  cursor: pointer;
+`;

@@ -37,6 +37,12 @@ export function Client() {
     fetchData();
   }, []);
 
+  const handleAddressClick = (mapUrl) => {
+    if (mapUrl) {
+      window.open(mapUrl, '_blank');
+    }
+  };
+
   return (
     <>
       <Header
@@ -55,7 +61,15 @@ export function Client() {
                 <Card key={local.id}>
                   <CardHeader key={local.id}>{local.nome_local}</CardHeader>
                   <Address>
-                    <p><strong>Endereço:</strong> {local.endereco}</p>
+                    <p>
+                      <strong>Endereço: </strong> 
+                      <span 
+                        style={{cursor: 'pointer'}}
+                        onClick={() => handleAddressClick(local.map_url)}
+                      >
+                        {local.endereco}
+                      </span>
+                    </p>
                     <p><strong>Telefone:</strong> {local.telefone}</p>
 
                     <h4>Alguns Serviços Ofertados:</h4>

@@ -243,13 +243,14 @@ def lista_agendamentos_logica(data):
                 if local_barbeiro:
                     ag_data['local_nome'] = local_barbeiro.nome_local
                     ag_data['local_endereco'] = local_barbeiro.endereco
+                    query_mapa = f"{local_barbeiro.endereco}"
+                    ag_data['map_url'] = gerar_url_mapa_incorporado(query_mapa)
             
             resultado_final.append(ag_data)
 
         return JsonResponse({"status": True, "agendamentos": resultado_final})
 
     except Exception as e:
-        # ... (seu tratamento de erro)
         return JsonResponse({"status": False, "msg": f"Erro inesperado: {str(e)}"})
     
 def obter_local_agendamento_logica(data):
@@ -434,23 +435,26 @@ def lista_agendamentos_barbeiro_logica(data):
 def listar_todas_barbearias_logica():
     """
     Busca e lista todas as barbearias (Locais) cadastradas no banco de dados.
-    
+    Inclui URL do mapa para cada barbearia.
     """
     try:
-        # Usa .all() para buscar todos os objetos do modelo Local
         todas_as_barbearias = Local.objects.all().order_by('nome_local')
         if not todas_as_barbearias.exists():
-            return True, [] # Retorna sucesso com uma lista vazia se não houver barbearias
+            return JsonResponse({"status": True, "data": []})
 
         resultado = []
         for local in todas_as_barbearias:
+            query_mapa = f"{local.endereco}"
+            map_url = gerar_url_mapa_incorporado(query_mapa)
+            
             resultado.append({
                 'id': local.id,
                 'nome_local': local.nome_local,
                 'endereco': local.endereco,
                 'telefone': local.telefone,
                 'cnpj': local.cnpj,
-                'barbeirousuarioid': local.barbeirousuarioid_id
+                'barbeirousuarioid': local.barbeirousuarioid_id,
+                'map_url': map_url
             })
         return JsonResponse({"status": True, "data": resultado})
 

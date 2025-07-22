@@ -4,7 +4,7 @@ import { useAuth } from "../../hooks/hookAuth";
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
 
-import { Container, Content, Title, List, ListItem, DeleteButton } from "./style";
+import { Container, Content, Title, List, ListItem, DeleteButton, ClickableAddress } from "./style";
 import { api } from "../../services/api";
 
 export function Required() {
@@ -49,12 +49,18 @@ export function Required() {
     }
   };
 
+  const handleAddressClick = (mapUrl) => {
+    if (mapUrl) {
+      window.open(mapUrl, '_blank');
+    }
+  };
+
   return (
     <Container>
       <Header
         links={[
           { label: "Home", to: "/" },
-          { label: "Agenda", to: "/calendar" },
+          { label: "Agenda", to: "/required" },
           { label: "Perfil", to: "/profile" },
           { label: "Sair", onClick: signOut },
         ]}
@@ -66,7 +72,12 @@ export function Required() {
             {agendamentos.map((agendamento) => (
               <ListItem key={agendamento.id}>
                 <strong>Barbearia: {agendamento.local_nome}</strong><br />
-                📍 {agendamento.local_endereco}<br />
+                <ClickableAddress 
+                  onClick={() => handleAddressClick(agendamento.map_url)}
+                  title="Clique para ver no mapa"
+                >
+                  📍 {agendamento.local_endereco}
+                </ClickableAddress><br />
                 🕒 {agendamento.hora} - 📅 {agendamento.data} <br />
                 <DeleteButton onClick={() => handleDelete(agendamento.id)}>
                   Excluir
