@@ -473,7 +473,7 @@ def listar_todos_servicos_logica():
         todos_os_servicos = Servicos.objects.select_related('idlocal').all().order_by('nome')
         
         if not todos_os_servicos.exists():
-            return True, []
+            return JsonResponse({"status": True, "data": []})
 
         resultado = []
         for servico in todos_os_servicos:

@@ -60,7 +60,7 @@ export function Calendar() {
         ]}
       />
       <Content>
-        <Title>Meus Pedidos</Title>
+        <Title>Agenda</Title>
         {agendamentos.length > 0 ? (
           <List>
             {agendamentos.map((agendamento) => (
