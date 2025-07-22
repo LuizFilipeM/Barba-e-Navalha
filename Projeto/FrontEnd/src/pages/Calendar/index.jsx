@@ -4,7 +4,7 @@ import { useAuth } from "../../hooks/hookAuth";
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
 
-import { Container, Content, Title, List, ListItem } from "./style";
+import { Container, Content, Title, List, ListItem, DeleteButton } from "./style";
 import { api } from "../../services/api";
 
 export function Calendar() {
@@ -28,6 +28,27 @@ export function Calendar() {
     fetchAgendamentos();
   }, [user.id]);
 
+  const handleDelete = async (id) => {
+    try {
+      const response = await api.delete(`/remover-agendamento/`, {
+        params: { id: id }
+      });
+      if (response.data.success) {
+        setAgendamentos(agendamentos.filter(agendamento => agendamento.id !== id));
+        alert(`Agendamento excluído com sucesso! ✅\n`);
+      } else {
+        alert(`Erro ao excluir agendamento ❌\n`);
+      }
+    } catch (error) {
+      console.error("Erro ao excluir agendamento:", error);
+      if (error.response) {
+        alert(`Erro: ${error.response.data.message || 'Não foi possível excluir o agendamento'}`);
+      } else {
+        alert('Não foi possível se conectar ao servidor. Tente novamente.');
+      }
+    }
+  };
+
   return (
     <Container>
       <Header
@@ -46,7 +67,10 @@ export function Calendar() {
               <ListItem key={agendamento.id}>
                 <strong>🕒 {agendamento.hora} - 📅 {agendamento.data}</strong><br />
                 {agendamento.cliente_nome}<br />
-                {agendamento.servico_nome}
+                {agendamento.servico_nome}<br />
+                <DeleteButton onClick={() => handleDelete(agendamento.id)}>
+                  Excluir
+                </DeleteButton>
               </ListItem>
             ))}
           </List>

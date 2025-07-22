@@ -45,3 +45,17 @@ export const ListItem = styled.li`
   font-size: 1rem;
   font-weight: 500;
 `;
+
+export const DeleteButton = styled.button`
+  padding: 5px 10px;
+  background-color: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: #cc0000;
+  }
+`;

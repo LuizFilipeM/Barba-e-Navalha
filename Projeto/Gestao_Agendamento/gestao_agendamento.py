@@ -92,7 +92,7 @@ def inserir_agendamento_logica(data):
             idcliente=cliente, idservicos=novo_servico,
             google_calendar_event_id=event_id_calendar
         )
-        return JsonResponse({"status": True, "msg": "Agendamento realizado com sucesso!"})
+        return JsonResponse({"status": True, "msg": "Agendamento realizado com sucesso."})
 
     except Exception as e:
         traceback.print_exc()

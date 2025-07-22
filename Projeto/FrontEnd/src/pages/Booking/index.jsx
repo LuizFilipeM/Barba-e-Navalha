@@ -111,10 +111,10 @@ export function Booking() {
           },
         }
       );
-      if (response.data.success) {
-        alert("Agendamento inserido com sucesso!✅" + response.data.message);
+      if (response.data.status === true) {
+        alert("Agendamento inserido com sucesso!✅");
       } else {
-        alert("Erro ao realizar agendamento.❌" + response.data.message);
+        alert("Erro ao realizar agendamento.❌");
       }
     } catch (error) {
       alert("Erro ao realizar agendamento.");

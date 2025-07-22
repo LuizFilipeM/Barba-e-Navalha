@@ -5,6 +5,7 @@ import { Profile } from "../pages/Profile"
 import { NotFound } from "../pages/NotFound"
 import { Required } from "../pages/Required"
 import { Booking } from "../pages/Booking"
+import { GmailAuth } from "../pages/GmailAuth"
 
 export function RouteClient() {
   return (
@@ -13,6 +14,7 @@ export function RouteClient() {
       <Route path="/profile" element={<Profile />} />
       <Route path="/required" element={<Required />} />
       <Route path="/booking/:id" element={<Booking />} />
+      <Route path="/pos-login" element={<GmailAuth />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

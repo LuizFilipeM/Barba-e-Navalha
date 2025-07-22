@@ -114,48 +114,57 @@ def pos_login(data, id_usuario):
         return False
         
 @csrf_exempt
-def cadastro_google(data):
-    data = json.loads(data.body)
-    tipo = data.get('tipo')
-    usuario_id = data.get('usuario_id')
-    nome = data.get('nome_google')
-    telefone = data.get('telefone')
-    data_nascimento = data.get('data_nascimento')
-    cidade = data.get('cidade')
-    cpf = data.get('cpf')
-    
-    usuario = Usuario.objects.get(id=84)
-    usuario.tipo = tipo
-    usuario.save()
+def cadastro_google(request):
+    try:
+        data = json.loads(request.body)
+        tipo = data.get('tipo')
+        usuario_id = data.get('usuario_id')
+        nome = data.get('nome')
+        telefone = data.get('telefone')
+        data_nascimento = data.get('data_nascimento')
+        cidade = data.get('cidade')
+        cpf = data.get('cpf')
+        
+        if not all([tipo, usuario_id, nome, telefone, data_nascimento, cidade, cpf]):
+            return JsonResponse({"status": False, "msg": "Dados incompletos"}, status=400)
+        
+        try:
+            usuario = Usuario.objects.get(id=usuario_id)
+            usuario.tipo = tipo
+            usuario.save()
+        except Usuario.DoesNotExist:
+            return JsonResponse({"status": False, "msg": "Usuário não encontrado"}, status=404)
 
-    # Cria o perfil correspondente
-    if tipo == 'Cliente':
-        cliente = Cliente(
-            nome=nome,
-            id=usuario,
-            cpf=cpf,
-            telefone=telefone,
-            data_nascimento=data_nascimento,
-            cidade=cidade
-        )
-        cliente.save()
+        # Cria o perfil correspondente
+        if tipo == 'Cliente':
+            cliente = Cliente(
+                id=usuario,
+                nome=nome,
+                cpf=cpf,
+                telefone=telefone,
+                data_nascimento=data_nascimento,
+                cidade=cidade
+            )
+            cliente.save()
+        elif tipo == 'Barbeiro':
+            barbeiro = Barbeiro(
+                id=usuario,
+                nome=nome,
+                cpf=cpf,
+                telefone=telefone,
+                data_nascimento=data_nascimento,
+                cidade=cidade
+            )
+            barbeiro.save()
+        else:
+            return JsonResponse({"status": False, "msg": "Tipo de usuário inválido"}, status=400)
 
-        return JsonResponse ({"status":True, "msg":"Cadastro realizado com sucesso!"})
+        return JsonResponse({"status": True, "msg": "Cadastro realizado com sucesso!"})
 
-    elif tipo == 'Barbeiro':
-        barbeiro = Barbeiro(
-            id=usuario,
-            nome=nome,
-            cpf=cpf,
-            telefone=telefone,
-            data_nascimento=data_nascimento,
-            cidade=cidade
-        )
-        barbeiro.save()
-
-        return JsonResponse ({"status":True, "msg":"Cadastro realizado com sucesso!"})
-
-    return JsonResponse ({"status":False, "msg":"Erro no cadastro!"})
+    except json.JSONDecodeError:
+        return JsonResponse({"status": False, "msg": "Dados inválidos"}, status=400)
+    except Exception as e:
+        return JsonResponse({"status": False, "msg": f"Erro no servidor: {str(e)}"}, status=500)
 
 def gerar_senha_temporaria(tamanho=8):
     caracteres = string.ascii_letters + string.digits
@@ -460,9 +469,8 @@ def editar_local(data, id):
         print("Atualizando dados...")
         rua = data.get('rua', '').strip()
         bairro = data.get('bairro', '').strip()
-        numero = data.get('numero', '').strip()
         cidade = data.get('cidadeLocal', '').strip()
-        endereco = f"{rua},{bairro},{numero},{cidade}"
+        endereco = f"{rua},{bairro},{cidade}"
 
         print(data)
         local.nome_local = data['nomeLocal']
@@ -471,12 +479,12 @@ def editar_local(data, id):
         local.save()
 
         print("Dados salvos com sucesso.")
-        return JsonResponse ({'status': 'success'})
+        return JsonResponse ({'status': True})
 
     except Usuario.DoesNotExist:
         print("Usuário não encontrado.")
-        return JsonResponse ({'status': 'error', 'message': 'Usuário não encontrado'})
+        return JsonResponse ({'status': False, 'message': 'Usuário não encontrado'})
     except Exception as e:
         print("Erro ao editar local:", e)
-        return JsonResponse ({'status': 'error', 'message': str(e)})
+        return JsonResponse ({'status': False, 'message': str(e)})
 

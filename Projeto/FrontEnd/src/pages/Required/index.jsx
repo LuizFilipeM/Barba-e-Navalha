@@ -4,7 +4,7 @@ import { useAuth } from "../../hooks/hookAuth";
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
 
-import { Container, Content, Title, List, ListItem } from "./style";
+import { Container, Content, Title, List, ListItem, DeleteButton } from "./style";
 import { api } from "../../services/api";
 
 export function Required() {
@@ -28,6 +28,27 @@ export function Required() {
     fetchAgendamentos();
   }, [user.name]);
 
+  const handleDelete = async (id) => {
+    try {
+      const response = await api.delete(`/remover-agendamento/`, {
+        params: { id: id }
+      });
+      if (response.data.success) {
+        setAgendamentos(agendamentos.filter(agendamento => agendamento.id !== id));
+        alert(`Agendamento excluído com sucesso! ✅\n`);
+      } else {
+        alert(`Erro ao excluir agendamento ❌\n`);
+      }
+    } catch (error) {
+      console.error("Erro ao excluir agendamento:", error);
+      if (error.response) {
+        alert(`Erro: ${error.response.data.message || 'Não foi possível excluir o agendamento'}`);
+      } else {
+        alert('Não foi possível se conectar ao servidor. Tente novamente.');
+      }
+    }
+  };
+
   return (
     <Container>
       <Header
@@ -46,7 +67,10 @@ export function Required() {
               <ListItem key={agendamento.id}>
                 <strong>Barbearia: {agendamento.local_nome}</strong><br />
                 📍 {agendamento.local_endereco}<br />
-                🕒 {agendamento.hora} - 📅 {agendamento.data}
+                🕒 {agendamento.hora} - 📅 {agendamento.data} <br />
+                <DeleteButton onClick={() => handleDelete(agendamento.id)}>
+                  Excluir
+                </DeleteButton>
               </ListItem>
             ))}
           </List>
@@ -60,4 +84,3 @@ export function Required() {
     </Container>
   );
 }
-

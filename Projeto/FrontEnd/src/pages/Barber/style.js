@@ -79,48 +79,45 @@ export const RegisterButtons = styled.div`
 `;
 
 export const RegisterButton = styled(Link)`
-  padding: 0.6rem 1.2rem;
+  padding: 0.1rem 1.2rem;
   border-radius: 6px;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 300;
   transition: all 0.3s ease;
-  border: 1px solid #007bff;
-  color: #007bff;
-  background-color: white;
+  border: none;
+  background-color: #007bff;
+  color: white;
 
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    background-color: #f0f7ff;
+    background-color: #0069d9;
   }
+`;
 
-  &.primary {
-    background-color: #007bff;
-    color: white;
+export const DeleteButton = styled.button`
+  padding: 5px 10px;
+  background-color: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin: auto;
 
-    &:hover {
-      background-color: #0069d9;
-      border-color: #0062cc;
-    }
+  &:hover {
+    background-color: #cc0000;
   }
 `;
 
 export const ServiceItem = styled.li`
-  background: #f8f9fa;
-  padding: 1rem;
-  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #f5f5f5;
   border-radius: 4px;
-  
-  div {
-    display: flex;
-    gap: 1rem;
-    margin: 0.5rem 0;
-  }
-  
-  p {
-    color: #6c757d;
-    font-size: 0.9rem;
-  }
 `;
 
 export const ScheduleItem = styled.li`
@@ -142,3 +139,4 @@ export const ScheduleItem = styled.li`
     font-size: 0.9rem;
   }
 `;
+

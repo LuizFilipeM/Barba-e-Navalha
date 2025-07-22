@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/hookAuth";
 import { api } from "../../services/api";
 
 import { Header } from "../../components/Header";
@@ -15,15 +16,16 @@ const TipoUsuario = {
 };
 
 export function GmailAuth() {
+  const { user, updateUser } = useAuth();
+
   const [formData, setFormData] = useState({
-    tipo: TipoUsuario.Cliente,  
+    tipo: TipoUsuario.Cliente,
+    nome: "",
     cpf: "",
     telefone: "",
     cidade: "",
     data_nascimento: "",
   });
-
-  const [googleUser, setGoogleUser] = useState(null);
 
   function getCookie(name) {
     return document.cookie
@@ -41,6 +43,7 @@ export function GmailAuth() {
 
   function validarCampos() {
     const campos = [
+      { nome: "Nome", valor: formData.nome },
       { nome: "CPF", valor: formData.cpf },
       { nome: "Telefone", valor: formData.telefone },
       { nome: "Cidade", valor: formData.cidade },
@@ -53,22 +56,18 @@ export function GmailAuth() {
       }
     }
 
-    if (!googleUser) {
-      return "Você precisa fazer login com o Google primeiro";
-    }
-
     return null;
   }
 
   function limparCampos() {
     setFormData({
       tipo: TipoUsuario.Cliente,
+      nome: "",
       cpf: "",
       telefone: "",
       cidade: "",
       data_nascimento: "",
     });
-    setGoogleUser(null);
   }
 
   async function handleSignUp(e) {
@@ -85,9 +84,7 @@ export function GmailAuth() {
     const dados = {
       ...formData,
       tipo: formData.tipo === TipoUsuario.Cliente ? "Cliente" : "Barbeiro",
-      google_id: googleUser.sub,
-      email: googleUser.email,
-      nome: googleUser.name,
+      usuario_id: user.id,
     };
 
     try {
@@ -97,8 +94,12 @@ export function GmailAuth() {
           "X-CSRFToken": csrftoken
         },
       });
-
       if (response.data.status === true) {
+        const dados2 = {
+          ...dados,
+          name: dados.nome,
+        }
+        updateUser(dados2);
         alert("Cadastro realizado com sucesso! ");
         limparCampos();
         navigate("/");
@@ -124,22 +125,21 @@ export function GmailAuth() {
       <Container>
         <Context>
           <Title>Faça o seu cadastro com Google</Title>
-
-          {!googleUser ? (
-            <div id="googleSignInButton" style={{ margin: '20px 0' }}></div>
-          ) : (
-            <div style={{ margin: '20px 0' }}>
-              <p>Logado como: {googleUser.name} ({googleUser.email})</p>
-            </div>
-          )}
-
-          {googleUser && (
             <Form onSubmit={handleSignUp}>
               <label htmlFor="tipo">Tipo de usuário</label>
               <Select id="tipo" name="tipo" value={formData.tipo} onChange={handleChange}>
                 <option value={TipoUsuario.Cliente}>Cliente</option>
                 <option value={TipoUsuario.Barbeiro}>Barbeiro</option>
               </Select>
+
+              <Input 
+                name="nome" 
+                label="Nome" 
+                placeholder="Nome" 
+                type="text" 
+                value={formData.nome} 
+                onChange={handleChange} 
+              />
 
               <Input 
                 name="cpf" 
@@ -180,7 +180,6 @@ export function GmailAuth() {
                 <Link to="/">Voltar</Link>
               </BackLinkWrapper>
             </Form>
-          )}
         </Context>
       </Container>
 

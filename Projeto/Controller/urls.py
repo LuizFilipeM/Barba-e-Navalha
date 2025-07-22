@@ -33,7 +33,7 @@ urlpatterns = [
     path("services/<int:id>/", views.cadastro_servico_view, name="api_cadastro_servico"),
     path("list-services/", views.listar_todos_servicos_view, name="api_lista_servico"),
     path("edit-services", views.editar_servico_barbeiro_view, name="api_edita_servico"),
-    path("delete-services", views.excluir_servico_barbeiro_view, name="api_delete_servico"),
+    path("delete-services/", views.excluir_servico_barbeiro_view, name="api_delete_servico"),
 
     #   HORARIOS
     path("schedule/<int:id>/", views.cadastrar_horario_view, name="api_cadastro_horario"),

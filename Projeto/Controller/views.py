@@ -74,16 +74,47 @@ def inserir_agendamento_view(request):
             dados = json.loads(request.body)
             return inserir_agendamento_logica(dados)
         except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+            return JsonResponse({'success': False, 'message': str(e)})
     else:
-        return JsonResponse({'success': False, 'message': 'Método não permitido'}, status=405)
+        return JsonResponse({'success': False, 'message': 'Método não permitido'})
     
 # Realiza o processo de remoção de um agendamento no banco de dados
 @csrf_exempt
 def remover_agendamento_view(request):
-    data = processar_requisicao(request)
-    return remover_agendamento_logica(data)
-
+    if request.method == 'DELETE':
+        try:
+            agendamento_id = request.GET.get('id')
+            if not agendamento_id:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'ID do agendamento não fornecido como parâmetro na URL'
+                }, status=400)
+                
+            data = {'agendamento_id': agendamento_id}
+            success, message = remover_agendamento_logica(data)
+            
+            if success:
+                return JsonResponse({
+                    'success': True,
+                    'message': message
+                }, status=200)
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'message': message
+                }, status=400)
+                
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Erro interno: {str(e)}'
+            }, status=500)
+    else:
+        return JsonResponse({
+            'success': False,
+            'message': 'Método não permitido'
+        }, status=405)
+    
 # Realiza o processo de atualização de um agendamento no banco de dados
 @csrf_exempt
 def atualizar_agendamento_view(request):
@@ -211,35 +242,35 @@ def google_login(request):
         if not token:
             return JsonResponse({"success": False, "message": "Token não fornecido"}, status=400)
 
-        # Verifica o token com o Google
         idinfo = id_token.verify_oauth2_token(token, requests.Request(), settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY)
         email = idinfo["email"]
         name = idinfo["name"]
         sub = idinfo["sub"]
 
-        # Verifica se já existe um usuário com este e-mail
         usuario = Usuario.objects.filter(email=email).first()
         
         if not usuario:
-            # Cria um novo usuário se não existir
             usuario = Usuario.objects.create(
-                email= email,
-                senha= "",  # pode deixar em branco ou armazenar o ID do Google, se quiser
+                email=email,
+                senha="",
             )
-       
-        r = pos_login(idinfo, usuario.id)
-        
-        #print("R: ", r)
-        # Aqui você pode gerar um token (JWT, etc). Por enquanto, retorna o usuário.
-        return JsonResponse({
+
+        response_data = {
             "success": True,
             "user": {
                 "id": usuario.id,
                 "email": usuario.email,
                 "tipo": usuario.tipo,
                 "id_google": sub,
-            }
-        })
+            },
+            "token": "seu_token_jwt_aqui" 
+        }
+
+        if not usuario.tipo:
+            response_data["requires_profile_completion"] = True
+            response_data["redirect_to"] = "/pos-login"
+
+        return JsonResponse(response_data)
 
     except ValueError:
         return JsonResponse({"success": False, "message": "Token inválido"}, status=400)
@@ -280,5 +311,31 @@ def editar_servico_barbeiro_view(request):
 # Realiza a exclusão de um serviço de um barbeiro
 @csrf_exempt
 def excluir_servico_barbeiro_view(request):
-    data = processar_requisicao(request)
-    return excluir_servico_barbeiro_logica(data)
+    if request.method == 'DELETE':
+        try:
+            # Pega os parâmetros da URL
+            barbeiro_id = request.GET.get('barbeiro_id')
+            servico_id = request.GET.get('servico_id')
+            
+            data = {
+                'barbeiro_id': barbeiro_id,
+                'servico_id': servico_id
+            }
+            
+            success, message = excluir_servico_barbeiro_logica(data)
+            
+            return JsonResponse({
+                'success': success,
+                'message': message
+            }, status=200 if success else 400)
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Erro interno: {str(e)}'
+            }, status=500)
+    else:
+        return JsonResponse({
+            'success': False,
+            'message': 'Método não permitido'
+        }, status=405)

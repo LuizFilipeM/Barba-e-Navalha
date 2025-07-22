@@ -1,73 +1,86 @@
-import { useState, useEffect, createContext, useContext } from "react"
-import { useNavigate } from "react-router-dom"
-import { api } from "../services/api"
+import { useState, useEffect, createContext, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { api } from "../services/api";
 
-const AuthContext = createContext({})
+const AuthContext = createContext({});
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const navigate = useNavigate()
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user")
-    const token = localStorage.getItem("token")
+    const storedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
     
     if (storedUser && token) {
-      setUser(JSON.parse(storedUser))
-      setIsAuthenticated(true)
+      setUser(JSON.parse(storedUser));
+      setIsAuthenticated(true);
     }
-  }, [])
+  }, []);
+
+  const updateUser = (newUserData) => {
+    setUser(prevUser => {
+      const updatedUser = { ...prevUser, ...newUserData };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      return updatedUser;
+    });
+  };
 
   async function signIn({ email, password }) {
-    const response = await api.post("/api/login/", {
-      email,
-      password
-    })
+    const response = await api.post("/api/login/", { email, password });
     
     if (response.data.success === true) {
-      const userData = response.data
-      const token = userData.token
+      const userData = response.data;
+      const token = userData.token;
 
-      setUser(userData)
-      setIsAuthenticated(true)
+      updateUser(userData);
+      setIsAuthenticated(true);
+      localStorage.setItem("token", token);
 
-      localStorage.setItem("user", JSON.stringify(userData))
-      localStorage.setItem("token", token)
-
-      return { success: true, token }
+      return { success: true, token };
     } else {
-      return { success: false, message: "Credenciais inválidas!" }
+      return { success: false, message: "Credenciais inválidas!" };
     }
   }
 
   async function signInWithGoogle(token) {
-    const response = await api.post("/oauth/login/google-oauth2/", {
-      token
-    })
-    
-    if (response.data.success === true) {
-      const userData = response.data
-      const token = userData.token
+    try {
+      const response = await api.post("/api/google-login/", { token });
+      if (response.data.success === true) {
+        const userData = response.data.user;
+        const token = response.data.token;
 
-      setUser(userData)
-      setIsAuthenticated(true)
+        updateUser(userData);
+        setIsAuthenticated(true);
+        localStorage.setItem("token", token);
 
-      localStorage.setItem("user", JSON.stringify(userData))
-      localStorage.setItem("token", token)
+        if (response.data.requires_profile_completion) {
+          return { 
+            success: true, 
+            token,
+            redirectTo: response.data.redirect_to
+          };
+        }
 
-      return { success: true, token }
-    } else {
-      return { success: false, message: response.data.message || "Falha no login com Google" }
+        return { success: true, token };
+      } else {
+        return { success: false, message: response.data.message || "Falha no login com Google" };
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || "Erro ao conectar com o servidor" 
+      };
     }
   }
 
   function signOut() {
-    setUser(null)
-    setIsAuthenticated(false)
-    localStorage.removeItem("user")
-    localStorage.removeItem("token")
-    navigate("/")
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    navigate("/");
   }
 
   return (
@@ -76,13 +89,14 @@ export function AuthProvider({ children }) {
       isAuthenticated, 
       signIn, 
       signInWithGoogle, 
-      signOut 
+      signOut,
+      updateUser
     }}>
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 export function useAuth() {
-  return useContext(AuthContext)
+  return useContext(AuthContext);
 }

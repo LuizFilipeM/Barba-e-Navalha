@@ -33,17 +33,25 @@ export function SignIn() {
   }
 
   const handleLoginSuccess = async (credentialResponse) => {
-    await api.get('/csrf/')
-      
-    const { credential } = credentialResponse
-    const result = await signInWithGoogle(credential)
-      
-    if (!result.success) {
-      alert(`❌ ${result.message}`)
-    } else {
-      navigate("/")
+    try {
+        await api.get('/csrf/');
+        const { credential } = credentialResponse;
+        const result = await signInWithGoogle(credential);
+        
+        if (result.success) {
+            if (result.redirectTo) {
+                navigate(result.redirectTo);
+            } else {
+                navigate("/");
+            }
+        } else {
+            alert(`❌ ${result.message}`);
+        }
+    } catch (error) {
+        console.error(error);
+        alert("❌ Ocorreu um erro durante o login com Google");
     }
-  }
+};
 
   return (
     <>
